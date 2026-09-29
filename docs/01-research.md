@@ -24,7 +24,7 @@ Each flight could show its status, terminal, gate, baggage belt, scheduled, esti
 
 The app shows real-time arrivals and departures for Sweden's 10 Swedavia airports. It gets flight data from the Swedavia FlightInfo API v2 at `https://api.swedavia.se/flightinfo/v2`, using the `Ocp-Apim-Subscription-Key` request header. The Python code calls the API and formats its JSON response.
 
-The API does not provide a country field. The original app uses `city_country.json`, built from Swedavia's statistics Excel file, which contains 263 cities and 59 countries. The API returns times in UTC, and the app converts them to Swedish time. D/I most likely means Domestic/International. When a field such as gate is missing, the app displays a fallback such as `N/A`.
+The API does not provide a country field. The original app uses `city_country.json`, built from Swedavia's statistics Excel file, which contains 263 cities and 59 countries. The API returns times in UTC, and the app converts them to Swedish time. What does D/I mean? My first guess was Domestic/International. Real API data later showed the field is called `diIndicator` and has three values: D, S, and I (see "Verifying the Guesses Against Real Data"). When a field such as gate is missing, the app displays a fallback such as `N/A`.
 
 ### Step 3: Guess the Inputs
 
@@ -78,6 +78,28 @@ def lookup_country(city):
 - A country in the destination list, despite the API having no country field, led me to `city_country.json`.
 - The original API key appeared hardcoded in the source code. This is a security risk to correct in my version; I do not reproduce the key here.
 
+## Verifying the Guesses Against Real Data
+
+After getting my own API key, I called `GET /ARN/arrivals/{date}` and saved the response as `docs/sample-arrivals.json`. I compared the real data with my guesses from the video.
+
+| Guess                                           | Real data                                                          | Result                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------- |
+| The API returns the whole day                   | One long list of arrivals for ARN for the selected date            | Confirmed                                                   |
+| Times are in UTC                                | Fields `arrivalTime.scheduledUtc`, `estimatedUtc`, and `actualUtc` | Confirmed                                                   |
+| Gate is sometimes missing, so the app shows N/A | Some flights have no gate field in `locationAndStatus`             | Confirmed                                                   |
+| `actualUtc` is missing for upcoming flights     | Only landed flights have `actualUtc`                               | Confirmed (this is how the original `_is_upcoming()` works) |
+| Country is not in the API                       | Only `departureAirportEnglish` and IATA codes                      | Confirmed (explains `city_country.json`)                    |
+| D/I means Domestic/International                | `diIndicator` has three values: D, S, and I                        | Partly wrong                                                |
+
+### What the Real Data Revealed
+
+- **`diIndicator`:** D means domestic (for example, Göteborg, Luleå, Umeå, and Visby). S is most likely Schengen (for example, Copenhagen, Oslo, Frankfurt, Amsterdam, and Barcelona). I means outside Schengen (for example, London, Istanbul, New York, Doha, and Beijing). The original app showed only "D/I", so its label hid the third value.
+- **Time zone:** The API showed 05:09 UTC as "Landed 07:09", which is two hours later (Swedish summer time, CEST). The original app showed "16:25 UTC → 17:25 CET", which is one hour later. Either the video was recorded during winter time, or the original app uses a fixed offset. My version uses `ZoneInfo("Europe/Stockholm")`, which handles summer and winter time automatically.
+- **Date:** The date refers to Swedish local time. A flight scheduled for 2026-09-28 22:20 UTC appears in the list for 2026-09-29 because it lands at 00:20 Swedish time.
+- **Status codes:** `flightLegStatus` uses short codes: SCH (Scheduled), LAN (Landed), and CAN (Cancelled), with English and Swedish text versions.
+- **Fields not shown by the original app:** `remarksEnglish` (for example, "Last bag on belt"), `codeShareData`, `viaDestinations` (stopovers), `firstBagUtc`, `lastBagUtc`, and `airlineOperator.name`.
+- **Required header:** The API requires the `Accept: application/json` header. Without it, the API returned 400 Bad Request.
+
 ## Choice of Tools and Technologies
 
 - **Python and FastAPI:** Python is close to the original implementation. FastAPI supports async endpoints and provides automatic Swagger documentation.
@@ -103,3 +125,5 @@ def lookup_country(city):
 - **Problem:** I could not access the source code, only a video. **Solution:** I watched the recording step by step and noted the code, output, and AI explanation panel that I could see.
 - **Problem:** The video showed the original API key. **Solution:** I will use my own key, store it in `.env`, and keep it out of Git. I do not reproduce the original key in this documentation.
 - **Problem:** The assignment scope was unclear at first. **Solution:** I clarified it with my supervisor and teacher, then divided the work into the six reverse-engineering steps.
+- **Problem:** My first test call returned 400 Bad Request even though the API key was correct. **Solution:** I printed the full response with `curl -i` and compared it with the original code, then added the required `Accept: application/json` header.
+- **Problem:** My guess about D/I was based only on the label in the video. **Solution:** I verified it against real API data and found a third value (S).
