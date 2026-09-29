@@ -330,6 +330,16 @@ async function loadFlightWaitTimes(flight, container) {
   const requestNumber = ++detailsRequestNumber;
   const { airport, date } = state;
   const airportWaitTimes = state.waitTimes;
+  // With only one checkpoint there is nothing to filter, so skip the per-flight request.
+  if (airportWaitTimes?.stations?.length === 1) {
+    renderWaitTimeDetails(
+      container,
+      airportWaitTimes.stations,
+      "The only checkpoint at this airport",
+      airportWaitTimes.measuredLocal,
+    );
+    return;
+  }
   let result = null;
   try {
     if (flight.flightId) result = await fetchFlightWaitTimes(airport, flight.flightId, date);

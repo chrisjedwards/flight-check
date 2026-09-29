@@ -190,9 +190,11 @@ The app shows live security queue wait times from Swedavia's second API, the Wai
 
 #### Details panel and fallback
 
-- For a departure at a supported airport today, the details panel has a "Security queues" section. When the panel opens, it shows a small loading state and requests the per-flight wait times.
-- If the per-flight call fails or returns no queues, the panel uses the airport's queues with the same terminal as the flight. If the flight has no terminal or no queue matches, it shows all queues at the airport. At BMA and GOT, the queue has no terminal, so the panel always shows the airport's single queue. If there are no queues at all, it shows "—".
-- A short note says where the data comes from: "Near this flight's gate", "Terminal T5", or "All checkpoints at this airport", followed by the measured time.
+- For a departure at a supported airport today, the details panel has a "Security queues" section.
+- If the airport's wait time data (already loaded for the strip) has only one checkpoint, as at GOT and BMA today, the panel shows it directly with the note "The only checkpoint at this airport" and skips the per-flight request. There is nothing to filter, and skipping the call avoids waiting for a slow response. The rule is based on the loaded data, not on airport codes, so it adapts if Swedavia adds more checkpoints.
+- Otherwise (for example at ARN), the panel shows a small loading state and requests the per-flight wait times.
+- If the per-flight call fails or returns no queues, the panel uses the airport's queues with the same terminal as the flight. If the flight has no terminal or no queue matches, it shows all queues at the airport. If there are no queues at all, it shows "—".
+- A short note says where the data comes from: "Near this flight's gate", "Terminal T5", "All checkpoints at this airport", or "The only checkpoint at this airport", followed by the measured time.
 
 #### Why only for today
 
@@ -201,7 +203,7 @@ Wait times are live measurements of the queues right now. Showing them next to f
 #### Testing
 
 - `test_waittime.py` has 18 tests without network access. They test `simplify_station()` with the saved ARN and BMA samples (minutes, FastTrack, local time, and the label for a missing terminal); sorting; unsupported airports and a missing key without any HTTP call (a mock transport fails the test if a request is made); invalid airports; caching; the unknown-flight 400; other 400 errors being raised and logged without the key; 401, 5xx, and timeouts; and the endpoints with `get_wait_times` and `get_flight_wait_times` mocked.
-- Browser tests checked both themes at 1280 px and 390 px. They covered ARN, GOT, BMA, and MMX; the strip hidden for arrivals, other dates, and when not configured; color levels, FastTrack, overflow, and missing values with controlled responses; the details panel with per-flight data and both fallbacks; and the Refresh button and 60-second auto refresh. All 57 checks passed, and the earlier 117 frontend checks still passed.
+- Browser tests checked both themes at 1280 px and 390 px. They covered ARN, GOT, BMA, and MMX; the strip hidden for arrivals, other dates, and when not configured; color levels, FastTrack, overflow, and missing values with controlled responses; the details panel with per-flight data and both fallbacks; that GOT, BMA, and a controlled ARN response with one checkpoint send no per-flight request while ARN still does; and the Refresh button and 60-second auto refresh. All 64 checks passed, and the earlier 117 frontend checks still passed.
 
 ## Comparison: Original vs My Version
 
@@ -267,4 +269,4 @@ Wait times are live measurements of the queues right now. Showing them next to f
 - **Problem:** BMA and GOT queues have no terminal, so a label like "T5" and matching by terminal do not work. **Solution:** The label is the queue name without "Security ", and the details panel falls back to all queues at the airport.
 - **Problem:** Without `SWEDAVIA_WAITTIME_KEY`, the new feature could break the app. **Solution:** The feature turns itself off and the endpoints return `configured: false`.
 - **Problem:** Wait times are live data and would be misleading for other dates. **Solution:** They are only requested and shown for today's departures.
-- **Problem:** During a browser test, the per-flight call for GOT and BMA timed out after 10 seconds and returned 502. **Solution:** The details panel fell back to the airport's queues as designed. Repeated timing showed the API normally answers in under a second.
+- **Problem:** The per-flight request for GOT and BMA timed out once during testing and logged a 502 in the console. **Solution:** Airports with only one checkpoint skip the per-flight request, since there is nothing to filter.
