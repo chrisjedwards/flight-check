@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -35,7 +36,11 @@ def test_simplify_landed_flight_with_actual_time(sample_flights: list[dict[str, 
     )
 
     assert landed_flight is not None
-    simplified = simplify_flight(landed_flight, "arrivals")
+    simplified = simplify_flight(
+        landed_flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc),
+    )
     assert simplified["status"] == "LAN"
     assert simplified["actual"] is not None
     assert simplified["isUpcoming"] is False
@@ -54,22 +59,122 @@ def test_simplify_scheduled_flight_is_upcoming(sample_flights: list[dict[str, An
     )
 
     assert scheduled_flight is not None
-    assert simplify_flight(scheduled_flight, "arrivals")["isUpcoming"] is True
+    simplified = simplify_flight(
+        scheduled_flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 28, 0, 0, tzinfo=timezone.utc),
+    )
+    assert simplified["isUpcoming"] is True
 
 
 def test_cancelled_flight_is_marked(sample_flights: list[dict[str, Any]]) -> None:
     """The known cancelled sample flight is marked as cancelled."""
     cancelled_flight = next(flight for flight in sample_flights if flight.get("flightId") == "SK2182")
-    assert simplify_flight(cancelled_flight, "arrivals")["isCancelled"] is True
+    simplified = simplify_flight(
+        cancelled_flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc),
+    )
+    assert simplified["isCancelled"] is True
+    assert simplified["statusCategory"] == "cancelled"
 
 
 def test_delay_minutes_are_calculated(sample_flights: list[dict[str, Any]]) -> None:
     """Delay is estimated time minus scheduled time in whole minutes."""
     flight = next(flight for flight in sample_flights if flight.get("flightId") == "BLX158")
-    simplified = simplify_flight(flight, "arrivals")
+    simplified = simplify_flight(
+        flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc),
+    )
 
     assert simplified["delayMinutes"] == 85
     assert simplified["scheduledUtc"] == "2026-09-29T13:35:00Z"
+
+
+@pytest.mark.parametrize(
+    ("status_code", "status_text"),
+    [("ACT", "Departed"), ("DEL", "Deleted")],
+)
+def test_departed_or_deleted_past_flight_is_finished_and_not_upcoming(
+    status_code: str, status_text: str
+) -> None:
+    """A departed or deleted flight with a past time is never upcoming."""
+    flight = {
+        "arrivalTime": {"scheduledUtc": "2026-09-29T08:00:00Z"},
+        "locationAndStatus": {
+            "flightLegStatus": status_code,
+            "flightLegStatusEnglish": status_text,
+        },
+    }
+
+    simplified = simplify_flight(
+        flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc),
+    )
+
+    assert simplified["isFinished"] is True
+    assert simplified["isUpcoming"] is False
+    assert simplified["statusCategory"] == "finished"
+
+
+def test_delayed_flight_is_upcoming_when_estimate_is_ahead() -> None:
+    """A delayed flight stays upcoming if its estimated time is still ahead."""
+    flight = {
+        "arrivalTime": {
+            "scheduledUtc": "2026-09-29T09:00:00Z",
+            "estimatedUtc": "2026-09-29T10:30:00Z",
+        },
+        "locationAndStatus": {"flightLegStatus": "SEQ"},
+    }
+
+    simplified = simplify_flight(
+        flight,
+        "arrivals",
+        now_utc=datetime(2026, 9, 29, 10, 0, tzinfo=timezone.utc),
+    )
+
+    assert simplified["bestUtc"] == "2026-09-29T10:30:00Z"
+    assert simplified["bestLocal"] == "12:30"
+    assert simplified["delayMinutes"] == 90
+    assert simplified["isFinished"] is False
+    assert simplified["isUpcoming"] is True
+    assert simplified["statusCategory"] == "delayed"
+
+
+def test_upcoming_grace_period_is_fifteen_minutes() -> None:
+    """Only times within the 15-minute past grace period remain upcoming."""
+    now = datetime(2026, 9, 29, 12, 0, tzinfo=timezone.utc)
+    within_grace = {
+        "arrivalTime": {"scheduledUtc": "2026-09-29T11:50:00Z"},
+        "locationAndStatus": {"flightLegStatus": "SCH"},
+    }
+    outside_grace = {
+        "arrivalTime": {"scheduledUtc": "2026-09-29T11:44:00Z"},
+        "locationAndStatus": {"flightLegStatus": "SCH"},
+    }
+
+    assert simplify_flight(within_grace, "arrivals", now_utc=now)["isUpcoming"] is True
+    assert simplify_flight(outside_grace, "arrivals", now_utc=now)["isUpcoming"] is False
+
+
+def test_codeshares_and_baggage_times_from_sample(sample_flights: list[dict[str, Any]]) -> None:
+    """Codeshare numbers and bag timestamps are included as local display values."""
+    codeshare_flight = next(flight for flight in sample_flights if flight.get("codeShareData"))
+    baggage_flight = next(
+        flight
+        for flight in sample_flights
+        if (flight.get("baggage") or {}).get("firstBagUtc")
+        and (flight.get("baggage") or {}).get("lastBagUtc")
+    )
+
+    codeshares = simplify_flight(codeshare_flight, "arrivals")["codeShares"]
+    baggage = simplify_flight(baggage_flight, "arrivals")
+
+    assert codeshares == codeshare_flight["codeShareData"]
+    assert baggage["firstBag"] is not None
+    assert baggage["lastBag"] is not None
 
 
 def test_lhr_flight_includes_country(sample_flights: list[dict[str, Any]]) -> None:

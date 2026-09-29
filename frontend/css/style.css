@@ -1,1 +1,611 @@
-/* TODO: Add application styles. */
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap");
+
+:root {
+  color-scheme: light;
+  --page-bg: #edf2ee;
+  --surface: #ffffff;
+  --surface-soft: #f6f8f6;
+  --ink: #192521;
+  --muted: #687771;
+  --line: #dce5de;
+  --accent: #176b57;
+  --accent-strong: #105240;
+  --accent-soft: #e2f0e9;
+  --warm: #fff1dc;
+  --warm-ink: #86500a;
+  --cancelled: #78827e;
+  --shadow: 0 14px 38px rgb(24 50 39 / 6%);
+}
+
+:root[data-bs-theme="dark"] {
+  color-scheme: dark;
+  --page-bg: #141b19;
+  --surface: #1d2723;
+  --surface-soft: #222e29;
+  --ink: #edf4ef;
+  --muted: #a2b0a9;
+  --line: #34443c;
+  --accent: #78c7a5;
+  --accent-strong: #a4dfc2;
+  --accent-soft: #263d33;
+  --warm: #45351f;
+  --warm-ink: #ffd18a;
+  --cancelled: #89958e;
+  --shadow: 0 14px 38px rgb(0 0 0 / 18%);
+}
+
+* {
+  letter-spacing: 0;
+}
+
+body {
+  min-height: 100vh;
+  color: var(--ink);
+  background-color: var(--page-bg);
+  background-image: linear-gradient(90deg, transparent 0 97%, rgb(42 91 70 / 2%) 97% 100%);
+  background-size: 42px 100%;
+  font-family: "DM Sans", "Avenir Next", Avenir, sans-serif;
+  font-size: 0.9375rem;
+}
+
+.topbar {
+  min-height: 68px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface);
+}
+
+.app-shell {
+  max-width: 1320px;
+}
+
+.brand {
+  color: var(--ink);
+  font-size: 1rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.brand:hover {
+  color: var(--accent);
+}
+
+.brand-mark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.data-live,
+.eyebrow,
+.meta-label {
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.data-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #28a879;
+  box-shadow: 0 0 0 3px rgb(40 168 121 / 13%);
+}
+
+.eyebrow,
+.meta-label {
+  letter-spacing: 0.08em;
+}
+
+.page-heading h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.heading-copy {
+  color: var(--muted);
+}
+
+.board-meta {
+  display: grid;
+  gap: 2px;
+}
+
+.meta-value {
+  color: var(--accent-strong);
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.control-panel {
+  padding: 20px 22px 17px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.form-label {
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.form-control,
+.form-select {
+  min-height: 42px;
+  border-color: var(--line);
+  background-color: var(--surface);
+  color: var(--ink);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.refresh-button {
+  min-height: 42px;
+  border-color: var(--line);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.now-button {
+  min-height: 42px;
+  font-weight: 600;
+}
+
+.refresh-button span[aria-hidden="true"] {
+  display: inline-block;
+  font-size: 1.2rem;
+  line-height: 1;
+  vertical-align: -1px;
+}
+
+.direction-tabs {
+  gap: 4px;
+  padding: 4px;
+  border-radius: 7px;
+  background: var(--surface-soft);
+}
+
+.direction-tabs .nav-link {
+  min-width: 116px;
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.direction-tabs .nav-link.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 6px rgb(23 107 87 / 20%);
+}
+
+:root[data-bs-theme="dark"] .direction-tabs .nav-link.active {
+  color: #10231b;
+}
+
+.filter-control {
+  min-width: min(100%, 390px);
+}
+
+.filter-control .form-label {
+  white-space: nowrap;
+}
+
+.search-input {
+  min-width: 220px;
+}
+
+.quick-filters .btn {
+  min-width: 82px;
+  font-weight: 600;
+}
+
+.quick-filters .btn.active {
+  border-color: var(--accent);
+  background-color: var(--accent);
+  color: #fff;
+}
+
+:root[data-bs-theme="dark"] .quick-filters .btn.active {
+  color: #10231b;
+}
+
+.clear-filters {
+  color: var(--accent-strong);
+  font-size: 0.78rem;
+  text-decoration: none;
+}
+
+.clear-filters:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.flight-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.flight-region {
+  min-height: 180px;
+}
+
+.flight-region[aria-busy="true"] {
+  cursor: progress;
+}
+
+.board-table-wrap {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.flight-table {
+  min-width: 880px;
+  color: var(--ink);
+}
+
+.flight-table thead th {
+  padding: 13px 15px;
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-soft);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.flight-table tbody td {
+  padding: 13px 15px;
+  border-color: var(--line);
+  vertical-align: middle;
+}
+
+.flight-row:last-child td {
+  border-bottom: 0;
+}
+
+.flight-row {
+  cursor: pointer;
+}
+
+.flight-row:hover {
+  background-color: var(--surface-soft);
+}
+
+.flight-row:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+.flight-row.is-delayed {
+  background: color-mix(in srgb, var(--warm) 24%, var(--surface));
+}
+
+.flight-row.is-cancelled {
+  color: var(--cancelled);
+  opacity: 0.64;
+}
+
+.flight-row.is-cancelled .flight-number {
+  text-decoration: line-through;
+}
+
+.time-cell,
+.flight-cell,
+.route-cell,
+.status-cell {
+  white-space: nowrap;
+}
+
+.scheduled-time,
+.estimated-time,
+.actual-time,
+.flight-number,
+.flight-airline,
+.route-main,
+.route-country,
+.route-via,
+.flight-remark {
+  display: block;
+}
+
+.scheduled-time,
+.estimated-time,
+.actual-time,
+.flight-number {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.scheduled-time {
+  color: var(--ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.estimated-time {
+  color: var(--warm-ink);
+  font-size: 0.87rem;
+  font-weight: 700;
+}
+
+.actual-time,
+.flight-airline,
+.route-country,
+.route-via,
+.flight-remark {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.flight-number {
+  color: var(--accent-strong);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.route-main {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.route-flag {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.route-country {
+  padding-left: 1.45rem;
+}
+
+.route-via {
+  max-width: 240px;
+  overflow: hidden;
+  padding-left: 1.45rem;
+  text-overflow: ellipsis;
+}
+
+.location-cell,
+.baggage-cell {
+  color: var(--ink);
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+
+.status-badge {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.status-delayed {
+  background: #e88422;
+  color: #241505;
+}
+
+.flight-remark {
+  max-width: 190px;
+  padding-top: 4px;
+  white-space: normal;
+}
+
+.loading-state,
+.empty-state {
+  display: flex;
+  min-height: 180px;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  color: var(--muted);
+}
+
+.loading-state .spinner-border {
+  color: var(--accent);
+}
+
+.empty-state {
+  flex-direction: column;
+  gap: 4px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.empty-state strong {
+  color: var(--ink);
+  font-size: 0.98rem;
+}
+
+.empty-state span {
+  font-size: 0.84rem;
+}
+
+.api-alert {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-radius: 7px;
+  font-size: 0.88rem;
+}
+
+.page-footer {
+  padding: 17px 0 8px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-align: center;
+}
+
+.flight-details-panel {
+  width: min(100vw, 540px);
+  border-left: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.details-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+
+.details-header .offcanvas-title {
+  color: var(--ink);
+  font-size: 1.12rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.details-body {
+  padding: 0 22px 28px;
+}
+
+.detail-section {
+  padding: 19px 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-section-title {
+  margin: 0 0 12px;
+  color: var(--accent-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.detail-pair {
+  display: grid;
+  grid-template-columns: minmax(94px, 0.42fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.detail-pair dt {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.detail-pair dd {
+  margin: 0;
+  color: var(--ink);
+  font-size: 0.84rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.detail-remarks {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+  padding-left: 1.15rem;
+  color: var(--ink);
+  font-size: 0.84rem;
+}
+
+.detail-muted {
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 767.98px) {
+  .control-panel {
+    padding: 16px 14px;
+  }
+
+  .page-heading h1 {
+    font-size: 1.55rem;
+  }
+
+  .direction-tabs .nav-link {
+    min-width: 0;
+    padding-inline: 17px;
+  }
+
+  .filter-control {
+    width: 100%;
+  }
+
+  .quick-filters {
+    display: flex;
+    width: 100%;
+  }
+
+  .quick-filters .btn {
+    min-width: 0;
+    flex: 1 1 0;
+    padding-inline: 7px;
+  }
+
+  .search-input {
+    min-width: 0;
+  }
+
+  .flight-table {
+    min-width: 660px;
+  }
+
+  .api-alert {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 399.98px) {
+  .data-live {
+    font-size: 0.68rem;
+  }
+
+  .refresh-label {
+    display: none;
+  }
+
+  .refresh-button {
+    width: 44px !important;
+  }
+
+  .flight-table {
+    min-width: 610px;
+  }
+}
