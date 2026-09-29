@@ -5,22 +5,19 @@ import { createFlightTable, renderFlightDetails } from "./render.js";
 
 const PAGE_SIZE = 50;
 const REFRESH_INTERVAL_MS = 60_000;
-const CONTINENT_ORDER = ["Africa", "Asia", "Europe", "North America", "Oceania", "South America", "Antarctica"];
 const elements = {
   airport: document.querySelector("#airport-select"),
   date: document.querySelector("#date-select"),
   refresh: document.querySelector("#refresh-button"),
   directionTabs: [...document.querySelectorAll("[data-direction]")],
   search: document.querySelector("#flight-search"),
-  continent: document.querySelector("#continent-select"),
-  upcoming: document.querySelector("#upcoming-only"),
   count: document.querySelector("#flight-count"),
   updated: document.querySelector("#last-updated"),
-    refreshSpinner: document.querySelector("#refresh-spinner"),
-    fromTime: document.querySelector("#from-time"),
-    now: document.querySelector("#now-button"),
-    quickFilters: [...document.querySelectorAll("[data-show]")],
-    clearFilters: document.querySelector("#clear-filters"),
+  refreshSpinner: document.querySelector("#refresh-spinner"),
+  fromTime: document.querySelector("#from-time"),
+  now: document.querySelector("#now-button"),
+  quickFilters: [...document.querySelectorAll("[data-show]")],
+  clearFilters: document.querySelector("#clear-filters"),
   error: document.querySelector("#error-container"),
   results: document.querySelector("#flight-region"),
   pagination: document.querySelector("#pagination-region"),
@@ -33,6 +30,7 @@ const elements = {
   brandPicture: document.querySelector("#brand-picture"),
   brandLogo: document.querySelector("#brand-logo"),
   brandFallback: document.querySelector("#brand-fallback"),
+  themeColor: document.querySelector("#theme-color"),
 };
 
 const query = new URLSearchParams(window.location.search);
@@ -63,6 +61,7 @@ function applyTheme(theme, remember = false) {
   const isBoard = selectedTheme === "board";
   document.documentElement.dataset.theme = selectedTheme;
   document.documentElement.dataset.bsTheme = isBoard ? "dark" : "light";
+  elements.themeColor.content = isBoard ? "#111418" : "#0B2545";
   elements.themeToggle.setAttribute("aria-pressed", String(isBoard));
   elements.themeToggle.setAttribute(
     "aria-label",
