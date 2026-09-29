@@ -147,6 +147,14 @@ After testing the first frontend version myself, I found one bug and four things
 - The page had exactly one `<h1>`, no visible "Flight board" text, no duplicate HTML IDs, no `innerHTML`, and no JavaScript errors.
 - With the logo images blocked, the text "Flight Check" was shown instead.
 
+### Unknown Airport Check in the Frontend
+
+- The airport code comes from the URL, so a user can open a link such as `?airport=XXX`. The backend already returned 400 for unknown airports, but the frontend still sent the request first.
+- Since the theme switcher commit, `loadFlights()` in `app.js` first checks the code against the airport list from `GET /api/airports`. If the code is not in the list, it shows "Unknown airport: XXX" with a Retry button and does not call `/api/flights`.
+- The airport dropdown shows the code as "Unknown airport (XXX)", so the user can see what was selected and choose a real airport.
+- Because no request is sent, the browser console no longer shows a red 400 error for an unknown airport. A browser test with `?airport=XXX` confirmed the message, no flight request, and no console errors.
+- The backend check is still in place, so direct API calls with an unknown airport still return 400.
+
 ## Comparison: Original vs My Version
 
 | Aspect             | Original                                                        | My Version                                                            |
@@ -187,7 +195,7 @@ After testing the first frontend version myself, I found one bug and four things
 - **Problem:** After changing JavaScript, the browser still showed the old version, which looked like a bug. **Solution:** I found the browser had cached the old files and forced a fresh load with Cmd+Shift+R. I now hard-reload after frontend changes.
 - **Problem:** Old rows briefly appeared when switching airport or date. **Solution:** I show a loading spinner while the new data is fetched.
 - **Problem:** Status text sometimes appeared twice, in the badge and remarks. **Solution:** I skip remarks that repeat the status text.
-- **Problem:** An invalid airport shows a red 400 error in the browser console. **Solution:** I confirmed this is expected because the browser logs every failed request even when the app handles it and shows a clear message.
+- **Problem:** An invalid airport shows a red 400 error in the browser console. **Solution:** I confirmed this is expected because the browser logs every failed request even when the app handles it and shows a clear message. Later, the frontend started checking the airport before calling the API, so this error no longer appears (see "Unknown Airport Check in the Frontend").
 - **Problem:** Building HTML from API data can be a security risk. **Solution:** I use `createElement` and `textContent` instead of `innerHTML`.
 - **Problem:** Departed "Deleted" flights were shown as upcoming. **Solution:** I collected all real status codes first, then based upcoming on status and time instead of a missing actual time.
 - **Problem:** Hover information does not work on touch screens or with a keyboard. **Solution:** I added a details panel that opens on click, Enter, or Space.

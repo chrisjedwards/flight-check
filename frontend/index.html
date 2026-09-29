@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#e9f0eb" />
+    <meta id="theme-color" name="theme-color" content="#0B2545" />
     <title>Flight Check | Live airport board</title>
     <script>
       (() => {
@@ -21,6 +21,8 @@
         }
         root.dataset.theme = theme;
         root.dataset.bsTheme = theme === "board" ? "dark" : "light";
+        document.querySelector("#theme-color").content =
+          theme === "board" ? "#111418" : "#0B2545";
       })();
     </script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
@@ -166,7 +168,6 @@
           >
             <li class="nav-item" role="presentation">
               <button
-                id="arrivals-tab"
                 class="nav-link active"
                 type="button"
                 role="tab"
@@ -178,7 +179,6 @@
             </li>
             <li class="nav-item" role="presentation">
               <button
-                id="departures-tab"
                 class="nav-link"
                 type="button"
                 role="tab"
@@ -204,7 +204,6 @@
         <div class="row g-3 align-items-center mt-1">
           <div class="col-12 col-lg-auto">
             <div
-              id="quick-filters"
               class="btn-group btn-group-sm quick-filters"
               role="group"
               aria-label="Quick flight filters"
