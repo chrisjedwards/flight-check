@@ -27,6 +27,11 @@ const elements = {
   details: document.querySelector("#flight-details"),
   detailsTitle: document.querySelector("#flight-details-title"),
   detailsBody: document.querySelector("#flight-details-body"),
+  themeToggle: document.querySelector("#theme-toggle"),
+  themeToggleLabel: document.querySelector("#theme-toggle-label"),
+  themeToggleIcon: document.querySelector("#theme-toggle-icon"),
+  brandLogo: document.querySelector("#brand-logo"),
+  brandFallback: document.querySelector("#brand-fallback"),
 };
 
 const query = new URLSearchParams(window.location.search);
@@ -46,6 +51,51 @@ const state = {
 };
 
 let lastFocusedRow = null;
+// Enable each theme only after its matching SVG file exists to avoid 404 console errors.
+const LOGO_ASSETS_AVAILABLE = { sky: false, board: false };
+const LOGO_PATHS = {
+  sky: "/img/logo-sky.svg",
+  board: "/img/logo-board.svg",
+};
+
+function showBrandFallback() {
+  elements.brandLogo.hidden = true;
+  elements.brandLogo.removeAttribute("src");
+  elements.brandFallback.hidden = false;
+}
+
+function updateBrandLogo(theme) {
+  if (!LOGO_ASSETS_AVAILABLE[theme]) {
+    showBrandFallback();
+    return;
+  }
+
+  elements.brandLogo.src = LOGO_PATHS[theme];
+  elements.brandLogo.onerror = showBrandFallback;
+  elements.brandLogo.hidden = false;
+  elements.brandFallback.hidden = true;
+}
+
+function applyTheme(theme, remember = false) {
+  const selectedTheme = theme === "board" ? "board" : "sky";
+  const isBoard = selectedTheme === "board";
+  document.documentElement.dataset.theme = selectedTheme;
+  document.documentElement.dataset.bsTheme = isBoard ? "dark" : "light";
+  elements.themeToggle.setAttribute("aria-pressed", String(isBoard));
+  elements.themeToggle.setAttribute(
+    "aria-label",
+    isBoard ? "Switch to Nordic sky theme" : "Switch to departure board theme",
+  );
+  elements.themeToggleLabel.textContent = isBoard ? "Sky view" : "Board view";
+  elements.themeToggleIcon.textContent = isBoard ? "☼" : "◒";
+
+  if (remember) {
+    try {
+      localStorage.setItem("flight-check-theme", selectedTheme);
+    } catch {}
+  }
+  updateBrandLogo(selectedTheme);
+}
 
 function defaultShowForDate(date) {
   return date === todayInStockholm() ? "upcoming" : "all";
@@ -258,6 +308,9 @@ async function loadFlights(preserveCurrent = true) {
   elements.refreshSpinner.classList.remove("d-none");
 
   try {
+    if (!state.airports.some((airport) => airport.code === state.airport)) {
+      throw new ApiError(`Unknown airport: ${state.airport}`, 400);
+    }
     const flights = await fetchFlights(state.airport, state.direction, state.date);
     if (requestNumber !== state.requestNumber) return;
     state.flights = flights;
@@ -374,6 +427,13 @@ elements.details.addEventListener("hidden.bs.offcanvas", () => {
   if (lastFocusedRow?.isConnected) lastFocusedRow.focus();
   lastFocusedRow = null;
 });
+
+elements.themeToggle.addEventListener("click", () => {
+  const nextTheme = document.documentElement.dataset.theme === "board" ? "sky" : "board";
+  applyTheme(nextTheme, true);
+});
+elements.brandLogo.addEventListener("error", showBrandFallback);
+applyTheme(document.documentElement.dataset.theme);
 
 initialize();
 window.setInterval(() => loadFlights(), REFRESH_INTERVAL_MS);

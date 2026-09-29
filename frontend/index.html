@@ -5,23 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#e9f0eb" />
     <title>Flight Check | Live airport board</title>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        let theme;
+        try {
+          const savedTheme = localStorage.getItem("flight-check-theme");
+          if (savedTheme === "sky" || savedTheme === "board")
+            theme = savedTheme;
+        } catch {}
+        if (!theme) {
+          theme = window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "board"
+            : "sky";
+        }
+        root.dataset.theme = theme;
+        root.dataset.bsTheme = theme === "board" ? "dark" : "light";
+      })();
+    </script>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" />
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
     <link href="/css/style.css" rel="stylesheet" />
-    <script>
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
-      document.documentElement.dataset.bsTheme = prefersDark.matches
-        ? "dark"
-        : "light";
-      prefersDark.addEventListener("change", (event) => {
-        document.documentElement.dataset.bsTheme = event.matches
-          ? "dark"
-          : "light";
-      });
-    </script>
   </head>
   <body>
     <header class="topbar">
@@ -33,13 +40,35 @@
           href="/"
           aria-label="Flight Check home"
         >
-          <span class="brand-mark" aria-hidden="true">F</span>
-          <span>Flight Check</span>
+          <img id="brand-logo" class="brand-logo" alt="Flight Check" hidden />
+          <span
+            id="brand-fallback"
+            class="brand-fallback d-flex align-items-center gap-2"
+          >
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span>Flight Check</span>
+          </span>
         </a>
-        <span class="data-live"
-          ><span class="live-dot" aria-hidden="true"></span> Flight
-          information</span
-        >
+        <div class="navbar-tools d-flex align-items-center gap-3">
+          <span class="data-live">
+            <span class="live-dot" aria-hidden="true"></span> Flight information
+          </span>
+          <button
+            id="theme-toggle"
+            class="btn theme-toggle d-inline-flex align-items-center gap-2"
+            type="button"
+            aria-pressed="false"
+            aria-label="Switch to departure board theme"
+          >
+            <span
+              id="theme-toggle-icon"
+              class="theme-toggle-icon"
+              aria-hidden="true"
+              >◒</span
+            >
+            <span id="theme-toggle-label">Board view</span>
+          </button>
+        </div>
       </div>
     </header>
 
