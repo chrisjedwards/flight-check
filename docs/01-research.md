@@ -112,7 +112,7 @@ The original app decides that a flight is upcoming when the actual time is missi
 - **`diIndicator`:** D means domestic (for example, Göteborg, Luleå, Umeå, and Visby). S is most likely Schengen (for example, Copenhagen, Oslo, Frankfurt, Amsterdam, and Barcelona). I means outside Schengen (for example, London, Istanbul, New York, Doha, and Beijing). The original app showed only "D/I", so its label hid the third value.
 - **Time zone:** The API showed 05:09 UTC as "Landed 07:09", which is two hours later (Swedish summer time, CEST). The original app showed "16:25 UTC → 17:25 CET", which is one hour later. Either the video was recorded during winter time, or the original app uses a fixed offset. My version uses `ZoneInfo("Europe/Stockholm")`, which handles summer and winter time automatically.
 - **Date:** The date refers to Swedish local time. A flight scheduled for 2026-09-28 22:20 UTC appears in the list for 2026-09-29 because it lands at 00:20 Swedish time.
-- **Status codes:** `flightLegStatus` uses short codes: SCH (Scheduled), LAN (Landed), and CAN (Cancelled), with English and Swedish text versions.
+- **Status codes:** `flightLegStatus` uses short codes such as SCH (Scheduled), LAN (Landed), and CAN (Cancelled), with English and Swedish text versions. The full list is in "Status Codes Found in Real Data" above.
 - **Fields not shown by the original app:** `remarksEnglish` (for example, "Last bag on belt"), `codeShareData`, `viaDestinations` (stopovers), `firstBagUtc`, `lastBagUtc`, and `airlineOperator.name`.
 - **Required header:** The API requires the `Accept: application/json` header. Without it, the API returned 400 Bad Request.
 
@@ -129,12 +129,12 @@ The original app decides that a flight is upcoming when the actual time is missi
 ## Work Plan
 
 1. Project scaffold and Git setup (done).
-2. Research and documentation (this document).
-3. Backend: Swedavia client, time conversion, and caching.
-4. Frontend: airport and date selection, arrivals and departures tabs, and search.
-5. Destination filter using `city_country.json`.
-6. AI natural-language search.
-7. Testing, documentation, and video.
+2. Research and documentation (done, this document).
+3. Backend: Swedavia client, time conversion, and caching (done).
+4. Frontend: airport and date selection, arrivals and departures tabs, and search (done).
+5. Destination filter (done). The plan was to use `city_country.json`, but I replaced it with `airport_countries.json`, which maps IATA codes to countries. Search now matches country and continent (see [02-implementation.md](02-implementation.md)).
+6. AI natural-language search (not started; only a placeholder file and the settings exist).
+7. Final testing, documentation, and video (not finished).
 
 ## Problems & Solutions
 
