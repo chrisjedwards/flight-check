@@ -1,0 +1,82 @@
+{
+    "activeMeasurementStations": 7,
+    "waitTimes": [
+        {
+            "id": 5,
+            "queueName": "Security Terminal 2",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 4,
+            "isFastTrack": false,
+            "terminal": "T2",
+            "latitude": 59.64442,
+            "longitude": 17.92809,
+            "overflow": false
+        },
+        {
+            "id": 6,
+            "queueName": "Security Terminal 2 FastTrack",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 0,
+            "isFastTrack": true,
+            "terminal": "T2",
+            "latitude": 59.64442,
+            "longitude": 17.92809,
+            "overflow": false
+        },
+        {
+            "id": 7,
+            "queueName": "Security Terminal 3",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 0,
+            "isFastTrack": false,
+            "terminal": "T3",
+            "latitude": 59.64561,
+            "longitude": 17.92449,
+            "overflow": false
+        },
+        {
+            "id": 8,
+            "queueName": "Security Terminal 4",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 1,
+            "isFastTrack": false,
+            "terminal": "T4",
+            "latitude": 59.64775,
+            "longitude": 17.92761,
+            "overflow": false
+        },
+        {
+            "id": 9,
+            "queueName": "Security Terminal 4 FastTrack",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 0,
+            "isFastTrack": true,
+            "terminal": "T4",
+            "latitude": 59.64775,
+            "longitude": 17.92761,
+            "overflow": false
+        },
+        {
+            "id": 23,
+            "queueName": "Security Terminal 5F FastTrack",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 1,
+            "isFastTrack": true,
+            "terminal": "T5",
+            "latitude": 59.65176,
+            "longitude": 17.93376,
+            "overflow": false
+        },
+        {
+            "id": 24,
+            "queueName": "Security Terminal 5F",
+            "currentTime": "2026-09-29T13:27:04Z",
+            "currentProjectedWaitTime": 2,
+            "isFastTrack": false,
+            "terminal": "T5",
+            "latitude": 59.65176,
+            "longitude": 17.93376,
+            "overflow": false
+        }
+    ]
+}
