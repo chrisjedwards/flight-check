@@ -22,3 +22,15 @@
 | Implementation | Filtering could remove real destinations                       | Coverage-check script and tests, 100% verified                      |
 | Implementation | Duplicate IATA codes in the dataset                            | Preferred large, then medium, then small airports                   |
 | Implementation | Unknown IATA codes or missing data file                        | Fallback and one-time warning instead of crash                      |
+| Implementation | Browser showed old JavaScript after changes                    | Hard reload (Cmd+Shift+R) to bypass the cache                       |
+| Implementation | Old rows shown while new data was loading                      | Loading spinner when airport, date, or direction changes            |
+| Implementation | Status text repeated in remarks                                | Skip remarks that repeat the status                                 |
+| Implementation | 400 error visible in the console for an invalid airport        | Confirmed expected behavior; the app shows a clear message          |
+| Implementation | Risk of injected HTML from API data                            | `createElement` and `textContent` instead of `innerHTML`            |
+| Implementation | Departed "Deleted" flights shown as upcoming                   | Status and time-based logic, verified against 875 real flights      |
+| Implementation | Hover does not work on touch or keyboard                       | Details panel on click, Enter, or Space                             |
+| Implementation | Time-dependent logic hard to test                              | Tests with a fixed "now" time                                       |
+| Implementation | No live data for delayed-but-upcoming case                     | Controlled test response in the browser                             |
+| Implementation | AI agent broke the HTML while editing                          | Detected in browser tests, repaired, and verified manually          |
+| Implementation | Too many separate filters                                      | One search box plus quick filter buttons                            |
+| Implementation | Frontend files never committed (untracked)                     | Committed together; run `git status` before each change             |
