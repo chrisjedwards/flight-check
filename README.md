@@ -9,6 +9,11 @@ Flight Check is a web app skeleton for reverse-engineering a Python CLI that dis
 - pytest and FastAPI TestClient
 - Future AI provider options: local Ollama or Claude API
 
+## Data Sources
+
+- Flight data comes from the Swedavia FlightInfo API v2.
+- Airport and country data comes from OurAirports, which is public domain. From the `backend/` directory, regenerate it with `python scripts/build_airport_data.py`.
+
 ## Folder Overview
 
 - `backend/app/`: FastAPI application, configuration, and service placeholders
