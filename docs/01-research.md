@@ -82,15 +82,30 @@ def lookup_country(city):
 
 After getting my own API key, I called `GET /ARN/arrivals/{date}` and saved the response as `docs/sample-arrivals.json`. I compared the real data with my guesses from the video.
 
-| Guess                                                                                                                     | Real data                                                                                                  | Result                                                      |
-| ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The API returns the whole day                                                                                             | One long list of arrivals for ARN for the selected date                                                    | Confirmed                                                   |
-| Times are in UTC                                                                                                          | Fields `arrivalTime.scheduledUtc`, `estimatedUtc`, and `actualUtc`                                         | Confirmed                                                   |
-| Gate is sometimes missing, so the app shows N/A                                                                           | Some flights have no gate field in `locationAndStatus`                                                     | Confirmed                                                   |
-| `actualUtc` is missing for upcoming flights                                                                               | Only landed flights have `actualUtc`                                                                       | Confirmed (this is how the original `_is_upcoming()` works) |
-| Country is not in the API                                                                                                 | Only `departureAirportEnglish` and IATA codes                                                              | Confirmed (explains `city_country.json`)                    |
-| D/I means Domestic/International                                                                                          | `diIndicator` has three values: D, S, and I                                                                | Partly wrong                                                |
-| Departures use `departureTime` and `arrivalAirportEnglish` (guessed from the original code and the structure of arrivals) | Verified with a live call: 342 departures from ARN on 2026-09-29, same top-level `flights` key as arrivals | Confirmed                                                   |
+| Guess                                                                                                                     | Real data                                                                                                  | Result                                                                        |
+| ------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| The API returns the whole day                                                                                             | One long list of arrivals for ARN for the selected date                                                    | Confirmed                                                                     |
+| Times are in UTC                                                                                                          | Fields `arrivalTime.scheduledUtc`, `estimatedUtc`, and `actualUtc`                                         | Confirmed                                                                     |
+| Gate is sometimes missing, so the app shows N/A                                                                           | Some flights have no gate field in `locationAndStatus`                                                     | Confirmed                                                                     |
+| `actualUtc` is missing for upcoming flights                                                                               | ACT and LAN flights have actual times, but many DEL, CAN, SCH, and SEQ flights do not                      | Partly wrong: a missing actual time does not always mean a flight is upcoming |
+| Country is not in the API                                                                                                 | Only `departureAirportEnglish` and IATA codes                                                              | Confirmed (explains `city_country.json`)                                      |
+| D/I means Domestic/International                                                                                          | `diIndicator` has three values: D, S, and I                                                                | Partly wrong                                                                  |
+| Departures use `departureTime` and `arrivalAirportEnglish` (guessed from the original code and the structure of arrivals) | Verified with a live call: 342 departures from ARN on 2026-09-29, same top-level `flights` key as arrivals | Confirmed                                                                     |
+
+### Status Codes Found in Real Data
+
+I collected every status from today's arrivals and departures at ARN, GOT, and BMA (875 flights) through my own local API.
+
+| Status | Text            | Flights | Actual time set | Meaning                           |
+| ------ | --------------- | ------: | --------------: | --------------------------------- |
+| ACT    | Departed        |     143 |         143/143 | Finished                          |
+| DEL    | Deleted         |     122 |           0/122 | Finished (removed from the board) |
+| LAN    | Landed HH:MM    |     123 |         123/123 | Finished                          |
+| CAN    | Cancelled       |       4 |             0/4 | Finished (cancelled)              |
+| SCH    | Scheduled       |     431 |           0/431 | Not finished                      |
+| SEQ    | Estimated HH:MM |      52 |            0/52 | Not finished (new estimated time) |
+
+The original app decides that a flight is upcoming when the actual time is missing. The data shows that 122 flights with status DEL have no actual time even though they have already left. This means the original logic most likely shows departed flights as upcoming. I found this bug through data analysis, not by reading the original code.
 
 ### What the Real Data Revealed
 

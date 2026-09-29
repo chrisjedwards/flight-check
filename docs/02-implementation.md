@@ -31,7 +31,7 @@ First, I built `GET /api/health`, which returns `{"status": "ok"}`, a frontend p
 
 ### Testing the Backend
 
-- The backend has 20 automated pytest tests, and all pass.
+- The backend has 25 automated pytest tests, and all pass.
 - `test_timeutils.py` tests missing input, a summer example (05:09 UTC → 07:09), and a winter example (12:00 UTC → 13:00).
 - `test_swedavia.py` uses the saved real API response in `docs/sample-arrivals.json` to test `simplify_flight()`, including a flight without a gate. It also tests invalid airport and direction inputs.
 - No test calls the real API, so the tests are fast, free, and do not use the request quota.
@@ -56,7 +56,7 @@ First, I built `GET /api/health`, which returns `{"status": "ok"}`, a frontend p
 
 #### Computed fields
 
-Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityIata`, `delayMinutes` (negative means early), `isUpcoming` (using the original `_is_upcoming` logic), `isCancelled`, `remarks` (for example, "Last bag on belt"), `via` (stopovers), and `scheduledUtc`. Flights are sorted by scheduled time. Continent and coordinates prepare for future flags, continent filters, distance calculations, and a map.
+Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityIata`, `delayMinutes` (negative means early), `isUpcoming`, `isCancelled`, `remarks` (for example, "Last bag on belt"), `via` (stopovers), and `scheduledUtc`. Flights are sorted by scheduled time. Continent and coordinates prepare for future flags, continent filters, distance calculations, and a map.
 
 #### Airports endpoint
 
@@ -66,19 +66,71 @@ Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityI
 - Tests check that all 10 Swedavia airports and every destination in the sample data exist in the airport file.
 - Tests cover unknown and empty IATA codes, and `GET /api/airports`.
 
+### Frontend: First Version
+
+#### Structure
+
+The frontend uses plain HTML, Bootstrap 5, and vanilla JavaScript with ES modules. It has no build tools. The code is split into three files: `api.js` fetches data and handles errors, `render.js` builds table rows, badges, and flags, and `app.js` manages state, events, filters, paging, and auto refresh. The backend does the calculations, so the frontend only displays and filters the data.
+
+#### Features
+
+- The airport dropdown loads from `GET /api/airports`. The page also has a date picker that defaults to today and Arrivals/Departures tabs.
+- The flight table shows scheduled time, with the scheduled value struck through when the estimated time differs, flight number and airline, city with flag and country, stopovers (`via`), terminal and gate, baggage belt for arrivals, status badge, and region badge.
+- Status badges show Landed in green, Cancelled in red, Scheduled in blue, and orange `Delayed +X min` when delay is at least 15 minutes. Remarks such as "Last bag on belt" appear below the badge.
+- Flags are generated from the country code, so no image files are needed.
+- Client-side filters make no new API calls. They include search by flight number, city, country, or airline, a continent dropdown, and an "Only upcoming" checkbox, with a "Showing X of Y flights" counter. Search replaces the original app's separate flight-number search.
+- Paging shows 50 flights at a time with a "Show more" button, inspired by the original terminal app's 50-flight pages.
+- The page refreshes every 60 seconds to match the backend cache. It shows the last-updated time and has a manual refresh button. Filters and scroll position are kept.
+- Airport, direction, and date are stored in the URL, so a view can be shared and survives a page reload.
+- Loading spinner, clear API errors with a Retry button, and an empty state cover loading, error, and no-results cases. Missing values show as "—".
+- On small screens the table scrolls inside its own container and less important columns are hidden. Light and dark mode follow the system setting.
+
+#### Security
+
+- API data is never inserted with `innerHTML`. Elements are built with `createElement` and `textContent` to protect against injected HTML.
+- There are no inline `onclick` attributes; events use `addEventListener`.
+- The frontend contains no API key. It talks only to my backend, never directly to Swedavia.
+
+### Improvements After User Testing
+
+After testing the first frontend version myself, I found one bug and four things to improve.
+
+1. **Bug: finished flights shown as upcoming.** In Departures with "Only upcoming", flights marked "Deleted" and scheduled hours earlier were still shown. The cause was `isUpcoming` using only a missing actual time, inherited from the original app; DEL flights never get an actual time. Before changing the logic, I collected all real status codes (see [01-research.md](01-research.md)). The backend now treats a flight as finished when its status is ACT, DEL, LAN, or CAN, or when it has an actual time. A flight is upcoming when it is not finished and its best time (estimated, otherwise scheduled) is no more than 15 minutes in the past. This grace period keeps flights that are just about to leave. The new fields are `bestUtc`, `bestLocal`, `isFinished`, and `statusCategory` (`cancelled`, `delayed`, `finished`, or `scheduled`). ACT displays as "Departed". DEL keeps the API text "Deleted" because its exact meaning is not documented.
+2. **Details panel instead of hover.** I first considered a hover tooltip on the status, but hover does not work on touch screens and is hard to use with a keyboard or screen reader. Clicking a row or pressing Enter or Space opens a Bootstrap offcanvas panel from the right. Escape closes it and focus returns to the row. The panel shows flight and airline, route with flag, country and continent, region with an explanation, scheduled, estimated and actual time, delay, terminal and gate, baggage belt with first and last bag time, stopovers, codeshare flight numbers, and all remarks. The backend now returns `codeShares`, `firstBag`, and `lastBag`.
+3. **Filter by time.** A "From time" field sits next to the date, with a "Now" button that fills in the current Swedish time. The filter uses estimated time when available, so delayed flights appear at their new time. "Now" is disabled for other dates, and the selected time is stored in the URL.
+4. **Simpler filtering.** The first version had a search box, continent dropdown, and "Only upcoming" checkbox. The improved version has one search box that also matches continent (for example, "Asia" found 9 flights) and quick filters for All, Upcoming, Delayed, and Cancelled. Upcoming is the default for today; All is the default for other dates. A "Clear filters" link appears when a filter is active, and the choice is stored in the URL.
+5. **Region column removed.** This makes the table cleaner. Region (Domestic, Schengen, or International) is now shown in the details panel.
+
+### Testing the Frontend
+
+- **First version:** The AI agent tested the page in a real browser with Playwright: ARN arrivals and departures, switching to GOT (72 flights) and VBY (12 flights), searches for "SK", "London", and "Spain", filters, paging from 50 to 100 rows, a date with no flights, an invalid airport (which showed "Unknown airport: XXX" with Retry), and a mobile screen width.
+- **After the improvements:** Browser tests checked the details panel with mouse, Enter, Space, and Escape, including focus return; all quick filters; the time filter and Now button; Clear filters; and URL reload. Upcoming showed no finished flights.
+- No live flight matched the delayed-but-upcoming case during testing. A controlled browser response verified that it remained visible under Upcoming with its scheduled time struck through.
+- Automatic checks found no duplicate HTML IDs, `innerHTML`, inline `onclick`, or API key in the frontend. There were no JavaScript errors during normal use.
+- I also tested the page manually in my own browser, which is how I found the upcoming bug.
+
 ## Comparison: Original vs My Version
 
 <!-- Compare the original application and this implementation. -->
 
-| Aspect             | Original                                    | My Version                                                           |
-| ------------------ | ------------------------------------------- | -------------------------------------------------------------------- |
-| Time-zone handling | Fixed +1 hour time offset (CET)             | Automatic summer/winter time with `ZoneInfo`                         |
-| API requests       | No caching; every menu choice calls the API | 60-second cache to protect the request quota                         |
-| Testing            | No automated tests                          | 8 pytest tests using real sample data                                |
-| Country lookup     | City name to country mapping, 263 cities    | IATA code to country mapping, 4,155 airports, 100% coverage verified |
-| Flight details     | Only raw times                              | Calculated delay, cancelled flag, remarks, and stopovers             |
-| Airport list       | Hardcoded in the program                    | Served by the backend API                                            |
-| Location data      | No continent or location data               | Continent and coordinates for every destination                      |
+| Aspect             | Original                                                        | My Version                                                            |
+| ------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------- |
+| Time-zone handling | Fixed +1 hour time offset (CET)                                 | Automatic summer/winter time with `ZoneInfo`                          |
+| API requests       | No caching; every menu choice calls the API                     | 60-second cache to protect the request quota                          |
+| Testing            | No automated tests                                              | 25 pytest tests using real sample data                                |
+| Country lookup     | City name to country mapping, 263 cities                        | IATA code to country mapping, 4,155 airports, 100% coverage verified  |
+| Flight details     | Only raw times                                                  | Calculated delay, cancelled flag, remarks, and stopovers              |
+| Airport list       | Hardcoded in the program                                        | Served by the backend API                                             |
+| Location data      | No continent or location data                                   | Continent and coordinates for every destination                       |
+| Main interface     | Terminal menu with 6 options                                    | Web page with tabs, dropdowns, date and time pickers                  |
+| Flight search      | Separate menu option for flight number search                   | One search box for flight, city, country, airline, and continent      |
+| Paging             | Press Enter for the next 50 flights                             | "Show more" button, 50 at a time                                      |
+| Data updates       | Data shown only when a menu option is chosen                    | Auto refresh every 60 seconds                                         |
+| Presentation       | Text only                                                       | Flags, colored status badges, delay highlighting, light/dark mode     |
+| Sharing            | Cannot be shared                                                | Shareable link with airport, direction, date, time, and filter in URL |
+| Upcoming logic     | Actual time missing (can show departed DEL flights as upcoming) | Based on status and time, verified against 875 real flights           |
+| Flight details     | All information on one line in the terminal                     | Clean table plus a details panel with all information                 |
+| Time filter        | No time filter                                                  | Filter from a chosen time, with a Now button                          |
 
 ## Problems & Solutions
 
@@ -95,3 +147,15 @@ Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityI
 - **Problem:** Filtering could silently remove a real destination. **Solution:** I built a coverage-check script and tests that fail if a destination is missing.
 - **Problem:** The dataset had duplicate IATA codes. **Solution:** I prefer large, then medium, then small airports.
 - **Problem:** The app could crash if the airport data file was missing or a code was unknown. **Solution:** I added an empty fallback and a one-time warning in the log.
+- **Problem:** After changing JavaScript, the browser still showed the old version, which looked like a bug. **Solution:** I found the browser had cached the old files and forced a fresh load with Cmd+Shift+R. I now hard-reload after frontend changes.
+- **Problem:** Old rows briefly appeared when switching airport or date. **Solution:** I show a loading spinner while the new data is fetched.
+- **Problem:** Status text sometimes appeared twice, in the badge and remarks. **Solution:** I skip remarks that repeat the status text.
+- **Problem:** An invalid airport shows a red 400 error in the browser console. **Solution:** I confirmed this is expected because the browser logs every failed request even when the app handles it and shows a clear message.
+- **Problem:** Building HTML from API data can be a security risk. **Solution:** I use `createElement` and `textContent` instead of `innerHTML`.
+- **Problem:** Departed "Deleted" flights were shown as upcoming. **Solution:** I collected all real status codes first, then based upcoming on status and time instead of a missing actual time.
+- **Problem:** Hover information does not work on touch screens or with a keyboard. **Solution:** I added a details panel that opens on click, Enter, or Space.
+- **Problem:** Time-based logic is hard to test because "now" keeps changing. **Solution:** Tests use a fixed "now" time.
+- **Problem:** No live data matched the delayed-but-upcoming case during testing. **Solution:** I tested it with a controlled browser response.
+- **Problem:** The AI agent broke the HTML while editing by duplicating controls and putting a button inside the heading. **Solution:** Browser tests detected it; the HTML was repaired and I verified there is one Now button and no duplicate IDs.
+- **Problem:** There were too many separate filters. **Solution:** I use one search box that also matches continent, plus quick filter buttons.
+- **Problem:** The first frontend version was never committed, which I discovered when Git showed the files as untracked. **Solution:** I committed backend and frontend together and now run `git status` before each new change.
