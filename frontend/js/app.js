@@ -30,6 +30,7 @@ const elements = {
   themeToggle: document.querySelector("#theme-toggle"),
   themeToggleLabel: document.querySelector("#theme-toggle-label"),
   themeToggleIcon: document.querySelector("#theme-toggle-icon"),
+  brandPicture: document.querySelector("#brand-picture"),
   brandLogo: document.querySelector("#brand-logo"),
   brandFallback: document.querySelector("#brand-fallback"),
 };
@@ -51,29 +52,10 @@ const state = {
 };
 
 let lastFocusedRow = null;
-// Enable each theme only after its matching SVG file exists to avoid 404 console errors.
-const LOGO_ASSETS_AVAILABLE = { sky: false, board: false };
-const LOGO_PATHS = {
-  sky: "/img/logo-sky.svg",
-  board: "/img/logo-board.svg",
-};
-
+// Swap the logo for plain text if the image cannot load, instead of a broken-image icon.
 function showBrandFallback() {
-  elements.brandLogo.hidden = true;
-  elements.brandLogo.removeAttribute("src");
+  elements.brandPicture.hidden = true;
   elements.brandFallback.hidden = false;
-}
-
-function updateBrandLogo(theme) {
-  if (!LOGO_ASSETS_AVAILABLE[theme]) {
-    showBrandFallback();
-    return;
-  }
-
-  elements.brandLogo.src = LOGO_PATHS[theme];
-  elements.brandLogo.onerror = showBrandFallback;
-  elements.brandLogo.hidden = false;
-  elements.brandFallback.hidden = true;
 }
 
 function applyTheme(theme, remember = false) {
@@ -94,7 +76,6 @@ function applyTheme(theme, remember = false) {
       localStorage.setItem("flight-check-theme", selectedTheme);
     } catch {}
   }
-  updateBrandLogo(selectedTheme);
 }
 
 function defaultShowForDate(date) {
@@ -433,6 +414,8 @@ elements.themeToggle.addEventListener("click", () => {
   applyTheme(nextTheme, true);
 });
 elements.brandLogo.addEventListener("error", showBrandFallback);
+// The module runs deferred, so the image may already have failed before the listener existed.
+if (elements.brandLogo.complete && elements.brandLogo.naturalWidth === 0) showBrandFallback();
 applyTheme(document.documentElement.dataset.theme);
 
 initialize();

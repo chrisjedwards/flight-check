@@ -32,24 +32,29 @@
   </head>
   <body>
     <header class="topbar">
-      <div
-        class="container app-shell d-flex align-items-center justify-content-between"
-      >
-        <a
-          class="brand d-flex align-items-center gap-2"
-          href="/"
-          aria-label="Flight Check home"
-        >
-          <img id="brand-logo" class="brand-logo" alt="Flight Check" hidden />
-          <span
-            id="brand-fallback"
-            class="brand-fallback d-flex align-items-center gap-2"
+      <div class="container app-shell topbar-grid">
+        <a class="brand" href="/" aria-label="Flight Check home">
+          <picture id="brand-picture">
+            <source
+              media="(min-width: 768px)"
+              srcset="/images/fc_silver_desktop.PNG"
+              width="1800"
+              height="319"
+            />
+            <img
+              id="brand-logo"
+              class="brand-logo"
+              src="/images/fc_silver_mobile.PNG"
+              width="1000"
+              height="180"
+              alt="Flight Check"
+            />
+          </picture>
+          <span id="brand-fallback" class="brand-fallback" hidden
+            >Flight Check</span
           >
-            <span class="brand-mark" aria-hidden="true">F</span>
-            <span>Flight Check</span>
-          </span>
         </a>
-        <div class="navbar-tools d-flex align-items-center gap-3">
+        <div class="navbar-tools d-flex align-items-center justify-content-end gap-3">
           <span class="data-live">
             <span class="live-dot" aria-hidden="true"></span> Flight information
           </span>
@@ -73,12 +78,12 @@
     </header>
 
     <main class="container app-shell py-4 py-lg-5">
+      <h1 class="visually-hidden">Flight board</h1>
       <section
-        class="page-heading d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-3"
+        class="page-heading d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-2 gap-lg-3"
       >
         <div>
-          <p class="eyebrow mb-2">SWEDISH AIRPORTS</p>
-          <h1 class="mb-1">Flight board</h1>
+          <p class="eyebrow mb-1">SWEDISH AIRPORTS</p>
           <p class="heading-copy mb-0">
             Arrivals and departures, in local time.
           </p>
