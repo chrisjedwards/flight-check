@@ -12,3 +12,8 @@
 | Implementation | Port 8000 already in use                                       | Found and stopped the process with `lsof` and `kill`                |
 | Implementation | Outdated Xcode blocked Homebrew                                | Updated Xcode, reinstalled the package                              |
 | Implementation | Risk of committing secrets                                     | Verified with `git check-ignore` before the first commit            |
+| Implementation | Static mount on `/` can catch API routes                       | Defined API routes before the mount                                 |
+| Implementation | Tests calling the real API would use the quota                 | Used a saved real API response as test data                         |
+| Implementation | Unsure about departure field names                             | Verified with one live API call                                     |
+| Implementation | Risk of using up the 10,000 request limit                      | Added a 60-second in-memory cache                                   |
+| Implementation | Deprecation warning in pytest                                  | Confirmed it comes from libraries, not my code                      |
