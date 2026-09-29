@@ -1,7 +1,7 @@
 "use strict";
 
-import { ApiError, fetchAirports, fetchFlights } from "./api.js";
-import { createFlightTable, renderFlightDetails } from "./render.js";
+import { ApiError, fetchAirports, fetchFlights, fetchFlightWaitTimes, fetchWaitTimes } from "./api.js";
+import { createFlightTable, createWaitTimeChips, renderFlightDetails, renderWaitTimeDetails } from "./render.js";
 
 const PAGE_SIZE = 50;
 const REFRESH_INTERVAL_MS = 60_000;
@@ -31,6 +31,9 @@ const elements = {
   brandLogo: document.querySelector("#brand-logo"),
   brandFallback: document.querySelector("#brand-fallback"),
   themeColor: document.querySelector("#theme-color"),
+  waitStrip: document.querySelector("#waittime-strip"),
+  waitList: document.querySelector("#waittime-list"),
+  waitMeasured: document.querySelector("#waittime-measured"),
 };
 
 const query = new URLSearchParams(window.location.search);
@@ -47,9 +50,11 @@ const state = {
   visibleLimit: PAGE_SIZE,
   requestNumber: 0,
   hasLoaded: false,
+  waitTimes: null,
 };
 
 let lastFocusedRow = null;
+let detailsRequestNumber = 0;
 // Swap the logo for plain text if the image cannot load, instead of a broken-image icon.
 function showBrandFallback() {
   elements.brandPicture.hidden = true;
@@ -269,14 +274,87 @@ function openFlightDetails(flight, row) {
   const airport = state.airports.find((item) => item.code === state.airport)
     || { code: state.airport, name: state.airport };
   lastFocusedRow = row;
-  renderFlightDetails(
+  const showSecurityQueues = waitTimesApply() && Boolean(state.waitTimes?.supported && state.waitTimes?.configured);
+  const securityContainer = renderFlightDetails(
     elements.detailsTitle,
     elements.detailsBody,
     flight,
     state.direction,
     airport,
+    showSecurityQueues,
   );
+  if (securityContainer) loadFlightWaitTimes(flight, securityContainer);
   window.bootstrap.Offcanvas.getOrCreateInstance(elements.details).show();
+}
+
+// Wait times are live data, so they are only shown for today's departures.
+function waitTimesApply() {
+  return state.direction === "departures" && state.date === todayInStockholm();
+}
+
+function hideWaitTimes() {
+  state.waitTimes = null;
+  elements.waitStrip.hidden = true;
+  elements.waitList.replaceChildren();
+  elements.waitMeasured.textContent = "";
+}
+
+async function loadWaitTimes(requestNumber) {
+  if (!waitTimesApply()) {
+    hideWaitTimes();
+    return;
+  }
+  if (state.waitTimes && state.waitTimes.airport !== state.airport) hideWaitTimes();
+  try {
+    const waitTimes = await fetchWaitTimes(state.airport);
+    if (requestNumber !== state.requestNumber) return;
+    if (!waitTimes.supported || !waitTimes.configured || waitTimes.stations.length === 0) {
+      hideWaitTimes();
+      return;
+    }
+    state.waitTimes = waitTimes;
+    elements.waitList.replaceChildren(createWaitTimeChips(waitTimes.stations));
+    elements.waitMeasured.textContent = waitTimes.measuredLocal ? `Measured ${waitTimes.measuredLocal}` : "";
+    elements.waitStrip.hidden = false;
+  } catch {
+    // Wait times are extra information; the flight board works without them.
+    if (requestNumber === state.requestNumber) hideWaitTimes();
+  }
+}
+
+function normalizeTerminal(terminal) {
+  return String(terminal || "").trim().toUpperCase().replace(/^T/, "");
+}
+
+async function loadFlightWaitTimes(flight, container) {
+  const requestNumber = ++detailsRequestNumber;
+  const { airport, date } = state;
+  const airportWaitTimes = state.waitTimes;
+  let result = null;
+  try {
+    if (flight.flightId) result = await fetchFlightWaitTimes(airport, flight.flightId, date);
+  } catch {
+    result = null;
+  }
+  if (requestNumber !== detailsRequestNumber || !container.isConnected) return;
+
+  if (result?.stations?.length) {
+    renderWaitTimeDetails(container, result.stations, "Near this flight's gate", result.measuredLocal);
+    return;
+  }
+  // Fallback: same terminal as the flight, otherwise all checkpoints at the airport.
+  const stations = airportWaitTimes?.stations || [];
+  const terminal = normalizeTerminal(flight.terminal);
+  const sameTerminal = terminal
+    ? stations.filter((station) => station.terminal && normalizeTerminal(station.terminal) === terminal)
+    : [];
+  const note = sameTerminal.length ? `Terminal ${flight.terminal}` : "All checkpoints at this airport";
+  renderWaitTimeDetails(
+    container,
+    sameTerminal.length ? sameTerminal : stations,
+    note,
+    airportWaitTimes?.measuredLocal,
+  );
 }
 
 async function loadFlights(preserveCurrent = true) {
@@ -291,6 +369,7 @@ async function loadFlights(preserveCurrent = true) {
     if (!state.airports.some((airport) => airport.code === state.airport)) {
       throw new ApiError(`Unknown airport: ${state.airport}`, 400);
     }
+    loadWaitTimes(requestNumber);
     const flights = await fetchFlights(state.airport, state.direction, state.date);
     if (requestNumber !== state.requestNumber) return;
     state.flights = flights;
@@ -310,6 +389,7 @@ async function loadFlights(preserveCurrent = true) {
     } else {
       state.flights = [];
       state.hasLoaded = false;
+      hideWaitTimes();
       elements.pagination.replaceChildren();
       elements.count.textContent = "Flights could not be loaded";
       elements.results.replaceChildren();

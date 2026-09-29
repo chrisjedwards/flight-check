@@ -1,0 +1,27 @@
+{
+    "activeMeasurementStations": 2,
+    "waitTimes": [
+        {
+            "id": 23,
+            "queueName": "Security Terminal 5F FastTrack",
+            "currentTime": "2026-09-29T13:42:04Z",
+            "currentProjectedWaitTime": 0,
+            "isFastTrack": true,
+            "terminal": "T5",
+            "latitude": 59.65176,
+            "longitude": 17.93376,
+            "overflow": false
+        },
+        {
+            "id": 24,
+            "queueName": "Security Terminal 5F",
+            "currentTime": "2026-09-29T13:42:04Z",
+            "currentProjectedWaitTime": 4,
+            "isFastTrack": false,
+            "terminal": "T5",
+            "latitude": 59.65176,
+            "longitude": 17.93376,
+            "overflow": false
+        }
+    ]
+}

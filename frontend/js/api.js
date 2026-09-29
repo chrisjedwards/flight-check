@@ -38,3 +38,12 @@ export function fetchFlights(airport, direction, date) {
   const path = `/api/flights/${encodeURIComponent(airport)}/${encodeURIComponent(direction)}/${encodeURIComponent(date)}`;
   return requestJson(path);
 }
+
+export function fetchWaitTimes(airport) {
+  return requestJson(`/api/waittimes/${encodeURIComponent(airport)}`);
+}
+
+export function fetchFlightWaitTimes(airport, flightId, date) {
+  const path = `/api/waittimes/${encodeURIComponent(airport)}/flights/${encodeURIComponent(flightId)}`;
+  return requestJson(`${path}?date=${encodeURIComponent(date)}`);
+}

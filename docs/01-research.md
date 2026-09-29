@@ -116,6 +116,61 @@ The original app decides that a flight is upcoming when the actual time is missi
 - **Fields not shown by the original app:** `remarksEnglish` (for example, "Last bag on belt"), `codeShareData`, `viaDestinations` (stopovers), `firstBagUtc`, `lastBagUtc`, and `airlineOperator.name`.
 - **Required header:** The API requires the `Accept: application/json` header. Without it, the API returned 400 Bad Request.
 
+## Second API: WaitTime
+
+Swedavia also has a WaitTime API with the current waiting time in the security queues. I added it to show travelers how long the security check takes.
+
+### Finding the right version
+
+- The path from the old documentation (v1) returned 404.
+- I found the correct v2 path in Swedavia's SWIM registry entry and the v2 PDF documentation: `https://api.swedavia.se/waittimepublic/v2`. Only v2 is used.
+- The API uses its own subscription key (`SWEDAVIA_WAITTIME_KEY`), separate from the FlightInfo key, with the same two headers: `Ocp-Apim-Subscription-Key` and `Accept: application/json`.
+
+### Endpoints and response shape
+
+- `GET /airports/{airport}` returns all security queues at an airport.
+- `GET /airports/{airport}/flights?flightid={flightid}&date={date}` returns only the checkpoints near a departing flight's gate.
+
+Both return the same shape (a real ARN response is saved in `docs/sample-waittime-arn.json`):
+
+```json
+{
+  "activeMeasurementStations": 7,
+  "waitTimes": [
+    {
+      "id": 5,
+      "queueName": "Security Terminal 2",
+      "currentTime": "2026-09-29T13:27:04Z",
+      "currentProjectedWaitTime": 4,
+      "isFastTrack": false,
+      "terminal": "T2",
+      "latitude": 59.64442,
+      "longitude": 17.92809,
+      "overflow": false
+    }
+  ]
+}
+```
+
+`currentTime` is in UTC and `currentProjectedWaitTime` is in minutes. Compared with v1, the list of queues is wrapped in a `waitTimes` field next to `activeMeasurementStations`, and each queue has a new `overflow` field.
+
+### Checking the API before building (step 0)
+
+I wrote `backend/scripts/probe_waittime.py` to test the API before building on it. It reads the key from `backend/.env` without printing it.
+
+| Airport                            | Result                                         |
+| ---------------------------------- | ---------------------------------------------- |
+| ARN                                | 200, 7 queues in T2, T3, T4, and T5 (3 FastTrack) |
+| GOT                                | 200, 1 queue ("Security Landvetter")           |
+| BMA                                | 200, 1 queue ("Security Bromma")               |
+| MMX, LLA, UME, OSD, VBY, RNB, KRN  | 400, body `"Airport XXX not supported"`        |
+
+- **Supported airports:** Only ARN, BMA, and GOT have wait times, which matches Swedavia's documentation. The other seven airports return 400 "not supported".
+- **Per-flight endpoint:** The date format `YYYY-MM-DD` worked on the first try. For two upcoming ARN departures from terminal T5 (TG961 and LX1251), it returned the same shape with only the two T5F queues (regular and FastTrack). A real response is saved in `docs/sample-waittime-flight.json`.
+- **Unknown flights:** For a flight that does not exist, the per-flight endpoint returns 400 with the body `"No departure flightdata found for XX0000 at ARN on the 2026-09-29"`, not an empty list.
+- **No terminal at BMA and GOT:** Their single queue has `terminal: null`. A BMA response is saved in `docs/sample-waittime-bma.json`.
+- **Overflow:** `overflow` was `false` in all 20 entries I observed (13 in the live calls and 7 in the saved ARN sample). Its meaning is not documented, so I do not guess what it means.
+
 ## Choice of Tools and Technologies
 
 - **Python and FastAPI:** Python is close to the original implementation. FastAPI supports async endpoints and provides automatic Swagger documentation.

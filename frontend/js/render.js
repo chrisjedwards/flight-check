@@ -102,6 +102,35 @@ function createBaggageCell(flight) {
   return cell;
 }
 
+function waitLevel(minutes) {
+  if (!Number.isFinite(minutes)) return "waittime-unknown";
+  if (minutes < 10) return "waittime-low";
+  if (minutes <= 20) return "waittime-mid";
+  return "waittime-high";
+}
+
+export function createWaitTimeChips(stations) {
+  const list = element("ul", "waittime-chips");
+  stations.forEach((station) => {
+    const chip = element("li", `waittime-chip ${waitLevel(station.minutes)}`);
+    chip.append(element("span", "waittime-label", station.label || station.name || MISSING));
+    if (station.isFastTrack) chip.append(element("span", "waittime-fasttrack", "FastTrack"));
+    const minutes = Number.isFinite(station.minutes) ? `${station.minutes} min` : MISSING;
+    chip.append(element("span", "waittime-minutes", `· ${minutes}`));
+    if (station.overflow) {
+      // The meaning of "overflow" is not documented by Swedavia, so only the flag is shown.
+      const overflow = element("span", "waittime-overflow");
+      overflow.title = "Swedavia marks this queue as \"overflow\"";
+      overflow.append(element("span", "", "⚠"));
+      overflow.firstChild.setAttribute("aria-hidden", "true");
+      overflow.append(element("span", "visually-hidden", "(Swedavia marks this queue as overflow)"));
+      chip.append(overflow);
+    }
+    list.append(chip);
+  });
+  return list;
+}
+
 export function createFlightTable(flights, direction, onSelectFlight) {
   const wrapper = element("div", "table-responsive board-table-wrap");
   const table = element("table", "table align-middle flight-table mb-0");
@@ -189,7 +218,7 @@ function formatAirport(flight, useSelectedAirport, selectedAirport) {
   ].filter(Boolean).join(" · ");
 }
 
-export function renderFlightDetails(title, body, flight, direction, selectedAirport) {
+export function renderFlightDetails(title, body, flight, direction, selectedAirport, showSecurityQueues = false) {
   title.textContent = [flight.flightId || MISSING, flight.airline || MISSING].join(" · ");
   body.replaceChildren();
 
@@ -229,6 +258,17 @@ export function renderFlightDetails(title, body, flight, direction, selectedAirp
     locationEntries.push(["Last bag", flight.lastBag]);
   }
   addDetailsSection(body, "Airport details", locationEntries);
+
+  let securityContainer = null;
+  if (showSecurityQueues) {
+    const securitySection = element("section", "detail-section");
+    securitySection.append(element("h3", "detail-section-title", "Security queues"));
+    securityContainer = element("div", "detail-waittimes");
+    securityContainer.setAttribute("aria-live", "polite");
+    securityContainer.append(createWaitTimeLoading());
+    securitySection.append(securityContainer);
+    body.append(securitySection);
+  }
   addDetailsSection(body, "Stopovers", [["Via", (flight.via || []).join(", ") || MISSING]]);
   addDetailsSection(body, "Codeshares", [["Flight numbers", (flight.codeShares || []).join(", ") || MISSING]]);
 
@@ -243,4 +283,25 @@ export function renderFlightDetails(title, body, flight, direction, selectedAirp
     remarksSection.append(element("p", "detail-muted mb-0", MISSING));
   }
   body.append(remarksSection);
+  return securityContainer;
+}
+
+function createWaitTimeLoading() {
+  const loading = element("div", "detail-muted d-flex align-items-center gap-2");
+  loading.setAttribute("role", "status");
+  const spinner = element("span", "spinner-border spinner-border-sm");
+  spinner.setAttribute("aria-hidden", "true");
+  loading.append(spinner, element("span", "", "Loading security queues…"));
+  return loading;
+}
+
+export function renderWaitTimeDetails(container, stations, note, measuredLocal) {
+  container.replaceChildren();
+  if (stations.length === 0) {
+    container.append(element("p", "detail-muted mb-0", MISSING));
+    return;
+  }
+  container.append(createWaitTimeChips(stations));
+  const meta = [note, measuredLocal ? `Measured ${measuredLocal}` : ""].filter(Boolean).join(" · ");
+  if (meta) container.append(element("p", "detail-muted mb-0 mt-2", meta));
 }
