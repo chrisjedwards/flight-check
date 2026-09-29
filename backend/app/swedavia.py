@@ -2,6 +2,7 @@
 
 import os
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -65,7 +66,15 @@ async def get_flights(airport: str, direction: str, date: str) -> list[dict[str,
     return flights
 
 
-def simplify_flight(flight: dict[str, Any], direction: str) -> dict[str, Any]:
+FINISHED_STATUSES = {"ACT", "CAN", "DEL", "LAN"}
+
+
+def simplify_flight(
+    flight: dict[str, Any],
+    direction: str,
+    *,
+    now_utc: datetime | None = None,
+) -> dict[str, Any]:
     """Return the display fields for one arrival or departure."""
     if direction == "arrivals":
         city = flight.get("departureAirportEnglish")
@@ -82,11 +91,30 @@ def simplify_flight(flight: dict[str, Any], direction: str) -> dict[str, Any]:
     scheduled_utc = flight_time.get("scheduledUtc")
     estimated_utc = flight_time.get("estimatedUtc")
     actual_utc = flight_time.get("actualUtc")
+    best_utc = estimated_utc or scheduled_utc
     scheduled_time = parse_utc(scheduled_utc)
     estimated_time = parse_utc(estimated_utc)
+    best_time = parse_utc(best_utc)
     delay_minutes = None
     if scheduled_time is not None and estimated_time is not None:
         delay_minutes = int((estimated_time - scheduled_time).total_seconds() / 60)
+    status = location_status.get("flightLegStatus")
+    is_finished = status in FINISHED_STATUSES or bool(actual_utc)
+    current_time = now_utc or datetime.now(timezone.utc)
+    is_upcoming = (
+        not is_finished
+        and best_time is not None
+        and best_time > current_time - timedelta(minutes=15)
+    )
+    is_cancelled = status == "CAN"
+    if is_cancelled:
+        status_category = "cancelled"
+    elif delay_minutes is not None and delay_minutes >= 15 and not is_finished:
+        status_category = "delayed"
+    elif is_finished:
+        status_category = "finished"
+    else:
+        status_category = "scheduled"
 
     airport = lookup_airport(city_iata)
     remarks = [
@@ -120,9 +148,16 @@ def simplify_flight(flight: dict[str, Any], direction: str) -> dict[str, Any]:
         "lat": airport.get("lat") if airport else None,
         "lon": airport.get("lon") if airport else None,
         "delayMinutes": delay_minutes,
-        "isUpcoming": not actual_utc,
-        "isCancelled": location_status.get("flightLegStatus") == "CAN",
+        "isUpcoming": is_upcoming,
+        "isCancelled": is_cancelled,
         "remarks": remarks,
         "via": via,
         "scheduledUtc": scheduled_utc,
+        "bestUtc": best_utc,
+        "bestLocal": to_local_time(best_utc),
+        "isFinished": is_finished,
+        "statusCategory": status_category,
+        "codeShares": flight.get("codeShareData") or [],
+        "firstBag": to_local_time(baggage_info.get("firstBagUtc")),
+        "lastBag": to_local_time(baggage_info.get("lastBagUtc")),
     }
