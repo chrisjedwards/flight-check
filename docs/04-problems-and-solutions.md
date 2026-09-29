@@ -17,3 +17,8 @@
 | Implementation | Unsure about departure field names                             | Verified with one live API call                                     |
 | Implementation | Risk of using up the 10,000 request limit                      | Added a 60-second in-memory cache                                   |
 | Implementation | Deprecation warning in pytest                                  | Confirmed it comes from libraries, not my code                      |
+| Implementation | City name matching failed for names like "London LHR"          | Mapped countries by IATA code with OurAirports data                 |
+| Implementation | Airport dataset too large (9,054 airports)                     | Filtered on scheduled service, reduced to 4,155                     |
+| Implementation | Filtering could remove real destinations                       | Coverage-check script and tests, 100% verified                      |
+| Implementation | Duplicate IATA codes in the dataset                            | Preferred large, then medium, then small airports                   |
+| Implementation | Unknown IATA codes or missing data file                        | Fallback and one-time warning instead of crash                      |
