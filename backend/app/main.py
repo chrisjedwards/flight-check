@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 
 from app.swedavia import AIRPORTS, get_flights, simplify_flight
+from app.waittime import WaitTimeError, get_flight_wait_times, get_wait_times
 
 app = FastAPI(title="Flight Check")
 FRONTEND_DIR = Path(__file__).resolve().parents[2] / "frontend"
@@ -41,6 +42,28 @@ async def list_flights(airport: str, direction: str, day: date) -> list[dict]:
         simplified_flights,
         key=lambda flight: (flight.get("scheduledUtc") is None, flight.get("scheduledUtc") or ""),
     )
+
+
+@app.get("/api/waittimes/{airport}")
+async def list_wait_times(airport: str) -> dict:
+    """Return security queue wait times for an airport."""
+    try:
+        return await get_wait_times(airport)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except WaitTimeError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
+
+
+@app.get("/api/waittimes/{airport}/flights/{flight_id}")
+async def list_flight_wait_times(airport: str, flight_id: str, date: date) -> dict:
+    """Return the security queues near one departing flight's gate."""
+    try:
+        return await get_flight_wait_times(airport, flight_id, date.isoformat())
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail=str(error)) from error
+    except WaitTimeError as error:
+        raise HTTPException(status_code=502, detail=str(error)) from error
 
 
 app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

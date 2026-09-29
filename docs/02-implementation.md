@@ -31,9 +31,10 @@ First, I built `GET /api/health`, which returns `{"status": "ok"}`, a frontend p
 
 ### Testing the Backend
 
-- The backend has 25 automated pytest tests, and all pass.
+- The backend has 43 automated pytest tests, and all pass.
 - `test_timeutils.py` tests missing input, a summer example (05:09 UTC → 07:09), and a winter example (12:00 UTC → 13:00).
 - `test_swedavia.py` uses the saved real API response in `docs/sample-arrivals.json` to test `simplify_flight()`, including a flight without a gate. It also tests invalid airport and direction inputs.
+- `test_waittime.py` tests the security queue wait times (see "Security Queue Wait Times").
 - No test calls the real API, so the tests are fast, free, and do not use the request quota.
 - Manual checks with curl against the running server returned real arrivals and departures with local times; `XXX` returned 400, and `2026-13-45` returned 422.
 
@@ -155,13 +156,60 @@ After testing the first frontend version myself, I found one bug and four things
 - Because no request is sent, the browser console no longer shows a red 400 error for an unknown airport. A browser test with `?airport=XXX` confirmed the message, no flight request, and no console errors.
 - The backend check is still in place, so direct API calls with an unknown airport still return 400.
 
+### Security Queue Wait Times
+
+The app shows live security queue wait times from Swedavia's second API, the WaitTime API v2 (see "Second API: WaitTime" in [01-research.md](01-research.md)).
+
+#### Backend
+
+- `backend/app/waittime.py` follows the same pattern as `swedavia.py`: its own base URL and key (`SWEDAVIA_WAITTIME_KEY`), a 10-second timeout, and a 60-second in-memory cache per airport and per flight.
+- `SUPPORTED_AIRPORTS` is `{"ARN", "BMA", "GOT"}`, based on the step 0 results. For the other seven Swedavia airports, the backend answers directly with `supported: false` and never calls Swedavia.
+- `simplify_station()` returns `name`, `label`, `terminal`, `minutes`, `isFastTrack`, `overflow`, and `measuredLocal` (Swedish local time, HH:MM). `label` is the terminal, for example "T5". BMA and GOT have no terminal, so their label is the queue name without "Security ", for example "Bromma".
+- Stations are sorted by terminal, and within a terminal regular queues come before FastTrack.
+- If `SWEDAVIA_WAITTIME_KEY` is missing, the feature is turned off: the endpoints return `configured: false` with an empty list, and the rest of the app works as before.
+- **Error handling:**
+  - Swedavia returns 400 for an unknown flight, with a body that starts with "No departure flightdata found". Only this case becomes an empty list, because "no data for this flight" is not an error.
+  - Any other 400 is treated as an error. Its status and body are logged (never the key) so it is visible during development.
+  - Other errors (for example 401, 5xx, and timeouts) return 502 with a clear message.
+
+#### Endpoints
+
+- `GET /api/waittimes/{airport}` returns `{"airport", "supported", "configured", "measuredLocal", "stations": [...]}`.
+- `GET /api/waittimes/{airport}/flights/{flight_id}?date=YYYY-MM-DD` returns the same shape for one departing flight.
+- An invalid airport returns 400, and an invalid date returns 422 through FastAPI validation. Unsupported airports return 200 with `supported: false`.
+- Like the other API routes, they are defined before the static files mount in `main.py`.
+
+#### Frontend strip
+
+- A "Security queues" strip appears above the flight table only when all of these are true: the Departures tab is active, the date is today, the airport is supported, and the feature is configured.
+- Each checkpoint is shown as a chip, for example "T5 · 7 min", and FastTrack queues have a small "FastTrack" tag. The chip color shows the level: under 10 minutes green, 10–20 minutes amber, and over 20 minutes red. The number is always shown, so the information does not depend on color alone. The colors reuse the status badge colors, so they work in both themes.
+- "Measured HH:MM" shows when Swedavia last measured the queues.
+- If Swedavia marks a queue as `overflow`, a small neutral ⚠ icon is shown with the title 'Swedavia marks this queue as "overflow"'. Swedavia does not document what overflow means, so the app does not explain it further.
+- The strip reloads together with the flights: with the 60-second auto refresh, the Refresh button, and when the airport, date, or direction changes. The request runs next to the flight request, so a slow or failed wait time request never delays or breaks the flight table. If it fails, the strip is simply hidden.
+- On mobile, the chips wrap onto several lines.
+
+#### Details panel and fallback
+
+- For a departure at a supported airport today, the details panel has a "Security queues" section. When the panel opens, it shows a small loading state and requests the per-flight wait times.
+- If the per-flight call fails or returns no queues, the panel uses the airport's queues with the same terminal as the flight. If the flight has no terminal or no queue matches, it shows all queues at the airport. At BMA and GOT, the queue has no terminal, so the panel always shows the airport's single queue. If there are no queues at all, it shows "—".
+- A short note says where the data comes from: "Near this flight's gate", "Terminal T5", or "All checkpoints at this airport", followed by the measured time.
+
+#### Why only for today
+
+Wait times are live measurements of the queues right now. Showing them next to flights on another date would suggest they apply to that day, so the strip and the panel section are only shown for today. For other dates, the frontend does not request wait times at all.
+
+#### Testing
+
+- `test_waittime.py` has 18 tests without network access. They test `simplify_station()` with the saved ARN and BMA samples (minutes, FastTrack, local time, and the label for a missing terminal); sorting; unsupported airports and a missing key without any HTTP call (a mock transport fails the test if a request is made); invalid airports; caching; the unknown-flight 400; other 400 errors being raised and logged without the key; 401, 5xx, and timeouts; and the endpoints with `get_wait_times` and `get_flight_wait_times` mocked.
+- Browser tests checked both themes at 1280 px and 390 px. They covered ARN, GOT, BMA, and MMX; the strip hidden for arrivals, other dates, and when not configured; color levels, FastTrack, overflow, and missing values with controlled responses; the details panel with per-flight data and both fallbacks; and the Refresh button and 60-second auto refresh. All 57 checks passed, and the earlier 117 frontend checks still passed.
+
 ## Comparison: Original vs My Version
 
 | Aspect             | Original                                                        | My Version                                                            |
 | ------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Time-zone handling | Fixed +1 hour time offset (CET)                                 | Automatic summer/winter time with `ZoneInfo`                          |
 | API requests       | No caching; every menu choice calls the API                     | 60-second cache to protect the request quota                          |
-| Testing            | No automated tests                                              | 25 pytest tests using real sample data                                |
+| Testing            | No automated tests                                              | 43 pytest tests using real sample data                                |
 | Country lookup     | City name to country mapping, 263 cities                        | IATA code to country mapping, 4,155 airports, 100% coverage verified  |
 | Flight data        | Only raw times                                                  | Calculated delay, cancelled flag, remarks, and stopovers              |
 | Airport list       | Hardcoded in the program                                        | Served by the backend API                                             |
@@ -176,6 +224,7 @@ After testing the first frontend version myself, I found one bug and four things
 | Upcoming logic     | Actual time missing (can show departed DEL flights as upcoming) | Based on status and time, verified against 875 real flights           |
 | Flight details     | All information on one line in the terminal                     | Clean table plus a details panel with all information                 |
 | Time filter        | No time filter                                                  | Filter from a chosen time, with a Now button                          |
+| Security queues    | No security queue information                                   | Live security queue times per terminal and per flight at ARN, BMA and GOT |
 
 ## Problems & Solutions
 
@@ -212,3 +261,10 @@ After testing the first frontend version myself, I found one bug and four things
 - **Problem:** On a phone-sized screen (390 px), the theme button overlapped the centered logo. **Solution:** Below 768 px, the button shows only its icon. Its `aria-label` still gives it a name for screen readers.
 - **Problem:** Removing the visible "Flight board" heading would leave the page without an `<h1>`. **Solution:** I kept one `<h1>` with Bootstrap's `visually-hidden` class, so screen readers still find it.
 - **Problem:** A broken logo image would show a broken-image icon. Because the JavaScript loads after the page, the image could fail before the error handler exists. **Solution:** The script listens for the error and also checks at startup if the image has already failed. In both cases it shows the text "Flight Check" instead.
+- **Problem:** The WaitTime API path from the old v1 documentation returned 404. **Solution:** I found the v2 path in Swedavia's SWIM registry entry and the v2 PDF documentation, and use only v2.
+- **Problem:** Seven of the ten Swedavia airports have no wait times; the API returns 400 "not supported". **Solution:** The backend has a list of supported airports (ARN, BMA, GOT) and answers `supported: false` for the others without calling Swedavia.
+- **Problem:** The per-flight endpoint returns 400 for an unknown flight instead of an empty list. **Solution:** Only a 400 whose body starts with "No departure flightdata found" becomes an empty list. Other 400 errors are raised and logged with status and body, never the key.
+- **Problem:** BMA and GOT queues have no terminal, so a label like "T5" and matching by terminal do not work. **Solution:** The label is the queue name without "Security ", and the details panel falls back to all queues at the airport.
+- **Problem:** Without `SWEDAVIA_WAITTIME_KEY`, the new feature could break the app. **Solution:** The feature turns itself off and the endpoints return `configured: false`.
+- **Problem:** Wait times are live data and would be misleading for other dates. **Solution:** They are only requested and shown for today's departures.
+- **Problem:** During a browser test, the per-flight call for GOT and BMA timed out after 10 seconds and returned 502. **Solution:** The details panel fell back to the airport's queues as designed. Repeated timing showed the API normally answers in under a second.

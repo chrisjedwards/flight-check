@@ -735,6 +735,91 @@ body {
   font-size: 0.84rem;
 }
 
+.waittime-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.waittime-strip[hidden] {
+  display: none;
+}
+
+.waittime-title {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.waittime-measured {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.waittime-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.waittime-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.waittime-low {
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
+}
+
+.waittime-mid {
+  background: var(--status-delayed-bg);
+  color: var(--status-delayed-text);
+}
+
+.waittime-high {
+  background: var(--status-cancelled-bg);
+  color: var(--status-cancelled-text);
+}
+
+.waittime-unknown {
+  background: var(--surface-soft);
+  color: var(--muted);
+}
+
+.waittime-fasttrack {
+  padding: 0 5px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.waittime-overflow {
+  color: var(--ink);
+  cursor: help;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

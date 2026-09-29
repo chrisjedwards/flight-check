@@ -1,6 +1,6 @@
 # Flight Check
 
-Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swedavia airports. It rebuilds a Python terminal app (reverse-engineered from a screen recording) as a web app, using the Swedavia FlightInfo API v2. AI search is planned but not built yet.
+Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swedavia airports. It rebuilds a Python terminal app (reverse-engineered from a screen recording) as a web app, using the Swedavia FlightInfo API v2 and WaitTime API v2. AI search is planned but not built yet.
 
 ## Features
 
@@ -10,6 +10,7 @@ Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swe
 - One search box for flight number, city, country, airline, and continent
 - Quick filters (All, Upcoming, Delayed, Cancelled) and a "From time" filter with a Now button
 - A details panel for each flight, opened by click, Enter, or Space
+- Live security queue wait times for today's departures at ARN, BMA, and GOT, per terminal and per flight
 - Auto refresh every 60 seconds, with a 60-second backend cache to protect the API quota
 - Shareable links: airport, direction, date, time, and filter are stored in the URL
 - Two themes, "Nordic sky" and "Departure board", switched with a button in the navbar
@@ -25,13 +26,14 @@ Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swe
 ## Data Sources
 
 - Flight data comes from the Swedavia FlightInfo API v2.
+- Security queue wait times come from the Swedavia WaitTime API v2 (only ARN, BMA, and GOT). From the `backend/` directory, `python scripts/probe_waittime.py` checks the API; it needs the local server running.
 - Airport and country data comes from OurAirports, which is public domain. It is stored in `backend/app/data/airport_countries.json`. From the `backend/` directory, regenerate it with `python scripts/build_airport_data.py`, and check coverage with `python scripts/check_airport_coverage.py`.
 
 ## Folder Overview
 
-- `backend/app/`: FastAPI application, Swedavia client, time conversion, airport lookup, and configuration
+- `backend/app/`: FastAPI application, Swedavia FlightInfo and WaitTime clients, time conversion, airport lookup, and configuration
 - `backend/app/data/`: generated airport data
-- `backend/scripts/`: scripts to build and check the airport data
+- `backend/scripts/`: scripts to build and check the airport data and to probe the WaitTime API
 - `backend/tests/`: backend tests
 - `frontend/`: static HTML, CSS, JavaScript, and logo images served by FastAPI
 - `docs/`: project documentation for each phase
@@ -47,7 +49,11 @@ python -m pip install -r backend/requirements.txt
 cp backend/.env.example backend/.env
 ```
 
-Add your own Swedavia API key as `SWEDAVIA_API_KEY` in `backend/.env`. The file is ignored by Git. The other variables in the file are for the planned AI search and are not used yet.
+Add your own Swedavia keys in `backend/.env`. The file is ignored by Git.
+
+- `SWEDAVIA_API_KEY`: FlightInfo API key, required for flight data.
+- `SWEDAVIA_WAITTIME_KEY`: WaitTime API key, a separate subscription. It is optional: without it, the security queue feature is turned off and the rest of the app works as before.
+- `AI_PROVIDER`, `ANTHROPIC_API_KEY`, and `OLLAMA_MODEL` are for the planned AI search and are not used yet.
 
 Start the server:
 
@@ -62,6 +68,8 @@ Open <http://127.0.0.1:8000> to view the app.
 - `GET /api/health`: returns `{"status": "ok"}`
 - `GET /api/airports`: returns the 10 Swedavia airports
 - `GET /api/flights/{airport}/{direction}/{day}`: returns simplified flights, where `direction` is `arrivals` or `departures` and `day` is a date such as `2026-09-29`
+- `GET /api/waittimes/{airport}`: returns security queue wait times as `{airport, supported, configured, measuredLocal, stations}`; unsupported airports return `supported: false`
+- `GET /api/waittimes/{airport}/flights/{flight_id}?date=YYYY-MM-DD`: returns the security queues near one departing flight's gate, in the same shape
 
 ## Test
 
@@ -71,7 +79,7 @@ From the project root, with the virtual environment active:
 cd backend && python -m pytest -q
 ```
 
-The 25 tests use saved sample data and never call the real API.
+The 43 tests use saved sample data and never call the real API.
 
 ## Documentation
 
