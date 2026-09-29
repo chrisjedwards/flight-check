@@ -1,57 +1,155 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap");
 
-:root {
+:root[data-theme="sky"] {
   color-scheme: light;
-  --page-bg: #edf2ee;
+  --page-bg: #f4f7fb;
   --surface: #ffffff;
-  --surface-soft: #f6f8f6;
-  --ink: #192521;
-  --muted: #687771;
-  --line: #dce5de;
-  --accent: #176b57;
-  --accent-strong: #105240;
-  --accent-soft: #e2f0e9;
-  --warm: #fff1dc;
-  --warm-ink: #86500a;
-  --cancelled: #78827e;
-  --shadow: 0 14px 38px rgb(24 50 39 / 6%);
+  --surface-soft: #eaf0f7;
+  --ink: #13233a;
+  --muted: #3a5a80;
+  --line: #d3deea;
+  --primary: #0b2545;
+  --primary-text: #ffffff;
+  --accent: #3a86c8;
+  --accent-text: #23679d;
+  --accent-strong: #23679d;
+  --accent-soft: #e2f0fb;
+  --active-bg: #0b2545;
+  --active-text: #ffffff;
+  --nav-bg: #0b2545;
+  --nav-text: #ffffff;
+  --nav-muted: #d7e3f0;
+  --nav-hover: #80bcee;
+  --nav-mark-bg: #0b2545;
+  --primary-hover-bg: #17416d;
+  --time-color: #13233a;
+  --status-success-bg: #ddf4e4;
+  --status-success-text: #14532d;
+  --status-cancelled-bg: #fde2e2;
+  --status-cancelled-text: #991b1b;
+  --status-delayed-bg: #fff0d9;
+  --status-delayed-text: #8a3c00;
+  --status-scheduled-bg: #e1ecfa;
+  --status-scheduled-text: #173b74;
+  --live-indicator: #14532d;
+  --shadow: 0 14px 38px rgb(11 37 69 / 7%);
+  --bs-body-bg: var(--page-bg);
+  --bs-body-color: var(--ink);
+  --bs-body-color-rgb: 19, 35, 58;
+  --bs-body-bg-rgb: 244, 247, 251;
+  --bs-emphasis-color: var(--ink);
+  --bs-secondary-color: var(--muted);
+  --bs-tertiary-color: var(--muted);
+  --bs-secondary-bg: var(--surface-soft);
+  --bs-tertiary-bg: var(--surface);
+  --bs-border-color: var(--line);
+  --bs-primary: var(--primary);
+  --bs-primary-rgb: 11, 37, 69;
+  --bs-primary-text-emphasis: var(--primary);
+  --bs-primary-bg-subtle: var(--accent-soft);
+  --bs-primary-border-subtle: var(--line);
+  --bs-link-color: var(--accent-text);
+  --bs-link-color-rgb: 35, 103, 157;
+  --bs-link-hover-color: var(--primary);
+  --bs-link-hover-color-rgb: 11, 37, 69;
+  --bs-focus-ring-color: rgb(58 134 200 / 35%);
+  --bs-offcanvas-bg: var(--surface);
+  --bs-offcanvas-color: var(--ink);
 }
 
-:root[data-bs-theme="dark"] {
+:root[data-theme="board"] {
   color-scheme: dark;
-  --page-bg: #141b19;
-  --surface: #1d2723;
-  --surface-soft: #222e29;
-  --ink: #edf4ef;
-  --muted: #a2b0a9;
-  --line: #34443c;
-  --accent: #78c7a5;
-  --accent-strong: #a4dfc2;
-  --accent-soft: #263d33;
-  --warm: #45351f;
-  --warm-ink: #ffd18a;
-  --cancelled: #89958e;
-  --shadow: 0 14px 38px rgb(0 0 0 / 18%);
+  --page-bg: #111418;
+  --surface: #1b2027;
+  --surface-soft: #222832;
+  --ink: #ededed;
+  --muted: #a8aeb8;
+  --line: #39414c;
+  --primary: #f5b301;
+  --primary-text: #111418;
+  --accent: #f5b301;
+  --accent-text: #f5b301;
+  --accent-strong: #f5b301;
+  --accent-soft: #3b321c;
+  --active-bg: #f5b301;
+  --active-text: #111418;
+  --nav-bg: #1b2027;
+  --nav-text: #ededed;
+  --nav-muted: #a8aeb8;
+  --nav-hover: #ffd354;
+  --nav-mark-bg: #f5b301;
+  --primary-hover-bg: #ffd354;
+  --time-color: #f5b301;
+  --status-success-bg: #17372b;
+  --status-success-text: #a6f2bb;
+  --status-cancelled-bg: #482127;
+  --status-cancelled-text: #ffb3bb;
+  --status-delayed-bg: #4a3610;
+  --status-delayed-text: #ffd166;
+  --status-scheduled-bg: #193650;
+  --status-scheduled-text: #a9d7ff;
+  --live-indicator: #a6f2bb;
+  --shadow: 0 14px 38px rgb(0 0 0 / 22%);
+  --bs-body-bg: var(--page-bg);
+  --bs-body-color: var(--ink);
+  --bs-body-color-rgb: 237, 237, 237;
+  --bs-body-bg-rgb: 17, 20, 24;
+  --bs-emphasis-color: var(--ink);
+  --bs-secondary-color: var(--muted);
+  --bs-tertiary-color: var(--muted);
+  --bs-secondary-bg: var(--surface-soft);
+  --bs-tertiary-bg: var(--surface);
+  --bs-border-color: var(--line);
+  --bs-primary: var(--primary);
+  --bs-primary-rgb: 245, 179, 1;
+  --bs-primary-text-emphasis: var(--primary);
+  --bs-primary-bg-subtle: var(--accent-soft);
+  --bs-primary-border-subtle: var(--line);
+  --bs-link-color: var(--accent-text);
+  --bs-link-color-rgb: 245, 179, 1;
+  --bs-link-hover-color: #ffd354;
+  --bs-link-hover-color-rgb: 255, 211, 84;
+  --bs-focus-ring-color: rgb(245 179 1 / 40%);
+  --bs-offcanvas-bg: var(--surface);
+  --bs-offcanvas-color: var(--ink);
 }
 
 * {
   letter-spacing: 0;
 }
 
+body,
+.topbar,
+.control-panel,
+.board-table-wrap,
+.flight-table th,
+.flight-table td,
+.flight-details-panel,
+.details-header,
+.empty-state,
+.form-control,
+.form-select,
+.btn {
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
 body {
   min-height: 100vh;
   color: var(--ink);
   background-color: var(--page-bg);
-  background-image: linear-gradient(90deg, transparent 0 97%, rgb(42 91 70 / 2%) 97% 100%);
+  background-image: linear-gradient(90deg, transparent 0 97%, color-mix(in srgb, var(--accent) 3%, transparent) 97% 100%);
   background-size: 42px 100%;
   font-family: "DM Sans", "Avenir Next", Avenir, sans-serif;
   font-size: 0.9375rem;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 .topbar {
   min-height: 68px;
   border-bottom: 1px solid var(--line);
-  background: var(--surface);
+  background: var(--nav-bg);
+  color: var(--nav-text);
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
 }
 
 .app-shell {
@@ -59,14 +157,14 @@ body {
 }
 
 .brand {
-  color: var(--ink);
+  color: var(--nav-text);
   font-size: 1rem;
   font-weight: 700;
   text-decoration: none;
 }
 
 .brand:hover {
-  color: var(--accent);
+  color: var(--nav-hover);
 }
 
 .brand-mark {
@@ -75,10 +173,51 @@ body {
   height: 30px;
   place-items: center;
   border-radius: 8px;
-  background: var(--accent);
-  color: #fff;
+  background: var(--nav-mark-bg);
+  color: var(--primary-text);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 32px;
+}
+
+.brand-fallback[hidden],
+.brand-logo[hidden] {
+  display: none !important;
+}
+
+.navbar-tools {
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--nav-text) 38%, transparent);
+  border-radius: 6px;
+  color: var(--nav-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 15%, var(--nav-bg));
+  color: var(--nav-text);
+}
+
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.theme-toggle-icon {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .data-live,
@@ -94,14 +233,15 @@ body {
   align-items: center;
   gap: 8px;
   font-size: 0.78rem;
+  color: var(--nav-muted);
 }
 
 .live-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #28a879;
-  box-shadow: 0 0 0 3px rgb(40 168 121 / 13%);
+  background: var(--live-indicator);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live-indicator) 14%, transparent);
 }
 
 .eyebrow,
@@ -154,10 +294,43 @@ body {
   color: var(--ink);
 }
 
+.form-control::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+
 .form-control:focus,
 .form-select:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 0.2rem color-mix(in srgb, var(--accent) 18%, transparent);
+  box-shadow: 0 0 0 0.2rem var(--bs-focus-ring-color);
+}
+
+.btn-outline-secondary {
+  --bs-btn-color: var(--muted);
+  --bs-btn-border-color: var(--line);
+  --bs-btn-hover-color: var(--ink);
+  --bs-btn-hover-bg: var(--surface-soft);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-color: var(--active-text);
+  --bs-btn-active-bg: var(--active-bg);
+  --bs-btn-active-border-color: var(--active-bg);
+  --bs-btn-disabled-color: var(--muted);
+  --bs-btn-disabled-border-color: var(--line);
+}
+
+.btn-primary {
+  --bs-btn-color: var(--primary-text);
+  --bs-btn-bg: var(--primary);
+  --bs-btn-border-color: var(--primary);
+  --bs-btn-hover-color: var(--primary-text);
+  --bs-btn-hover-bg: var(--primary-hover-bg);
+  --bs-btn-hover-border-color: var(--primary-hover-bg);
+  --bs-btn-active-color: var(--primary-text);
+  --bs-btn-active-bg: var(--primary-hover-bg);
+  --bs-btn-active-border-color: var(--primary-hover-bg);
+  --bs-btn-disabled-color: var(--muted);
+  --bs-btn-disabled-bg: var(--surface-soft);
+  --bs-btn-disabled-border-color: var(--line);
 }
 
 .refresh-button {
@@ -195,13 +368,9 @@ body {
 }
 
 .direction-tabs .nav-link.active {
-  background: var(--accent);
-  color: #fff;
-  box-shadow: 0 2px 6px rgb(23 107 87 / 20%);
-}
-
-:root[data-bs-theme="dark"] .direction-tabs .nav-link.active {
-  color: #10231b;
+  background: var(--active-bg);
+  color: var(--active-text);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--active-bg) 20%, transparent);
 }
 
 .filter-control {
@@ -222,13 +391,9 @@ body {
 }
 
 .quick-filters .btn.active {
-  border-color: var(--accent);
-  background-color: var(--accent);
-  color: #fff;
-}
-
-:root[data-bs-theme="dark"] .quick-filters .btn.active {
-  color: #10231b;
+  border-color: var(--active-bg);
+  background-color: var(--active-bg);
+  color: var(--active-text);
 }
 
 .clear-filters {
@@ -238,7 +403,7 @@ body {
 }
 
 .clear-filters:hover {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: underline;
 }
 
@@ -267,6 +432,9 @@ body {
 .flight-table {
   min-width: 880px;
   color: var(--ink);
+  --bs-table-color: var(--ink);
+  --bs-table-bg: var(--surface);
+  --bs-table-border-color: var(--line);
 }
 
 .flight-table thead th {
@@ -284,6 +452,10 @@ body {
   padding: 13px 15px;
   border-color: var(--line);
   vertical-align: middle;
+}
+
+.flight-table tbody tr {
+  background-color: var(--surface);
 }
 
 .flight-row:last-child td {
@@ -306,12 +478,12 @@ body {
 }
 
 .flight-row.is-delayed {
-  background: color-mix(in srgb, var(--warm) 24%, var(--surface));
+  background: color-mix(in srgb, var(--status-delayed-bg) 34%, var(--surface));
 }
 
 .flight-row.is-cancelled {
-  color: var(--cancelled);
-  opacity: 0.64;
+  color: var(--status-cancelled-text);
+  background: color-mix(in srgb, var(--status-cancelled-bg) 48%, var(--surface));
 }
 
 .flight-row.is-cancelled .flight-number {
@@ -346,13 +518,13 @@ body {
 }
 
 .scheduled-time {
-  color: var(--ink);
+  color: var(--time-color);
   font-size: 0.88rem;
   font-weight: 600;
 }
 
 .estimated-time {
-  color: var(--warm-ink);
+  color: var(--time-color);
   font-size: 0.87rem;
   font-weight: 700;
 }
@@ -365,6 +537,10 @@ body {
   color: var(--muted);
   font-size: 0.72rem;
   line-height: 1.4;
+}
+
+.actual-time {
+  color: var(--time-color);
 }
 
 .flight-number {
@@ -415,8 +591,29 @@ body {
 }
 
 .status-delayed {
-  background: #e88422;
-  color: #241505;
+  background: var(--status-delayed-bg);
+  color: var(--status-delayed-text);
+}
+
+.status-badge.text-bg-success {
+  background-color: var(--status-success-bg) !important;
+  color: var(--status-success-text) !important;
+}
+
+.status-badge.text-bg-danger {
+  background-color: var(--status-cancelled-bg) !important;
+  color: var(--status-cancelled-text) !important;
+}
+
+.status-badge.text-bg-primary {
+  background-color: var(--status-scheduled-bg) !important;
+  color: var(--status-scheduled-text) !important;
+}
+
+.status-badge.text-bg-secondary {
+  background-color: var(--surface-soft) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line);
 }
 
 .flight-remark {
@@ -549,6 +746,17 @@ body {
   font-size: 0.84rem;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 @media (max-width: 767.98px) {
   .control-panel {
     padding: 16px 14px;
@@ -556,6 +764,14 @@ body {
 
   .page-heading h1 {
     font-size: 1.55rem;
+  }
+
+  .data-live {
+    display: none;
+  }
+
+  .navbar-tools {
+    gap: 8px !important;
   }
 
   .direction-tabs .nav-link {
