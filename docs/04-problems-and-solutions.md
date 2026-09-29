@@ -34,3 +34,11 @@
 | Implementation | AI agent broke the HTML while editing                          | Detected in browser tests, repaired, and verified manually          |
 | Implementation | Too many separate filters                                      | One search box plus quick filter buttons                            |
 | Implementation | Frontend files never committed (untracked)                     | Committed together; run `git status` before each change             |
+| Implementation | Wrong theme could flash while the page loads                   | Script in the page head sets the theme before the styles load       |
+| Implementation | Saving the theme fails if `localStorage` is blocked            | `try`/`catch`; the page still works without the saved choice        |
+| Implementation | Nordic sky accent blue too weak for text (3.6:1)               | Accent only for borders and focus; darker blue for text (5.6:1)     |
+| Implementation | Per-theme logo slots with no logo files                        | One silver logo for both themes; per-theme logic removed            |
+| Implementation | Logo not truly centered with a flex layout                     | Three-column grid with equal side columns (`minmax(0, 1fr)`)        |
+| Implementation | Theme button overlapped the logo on mobile                     | Icon-only theme button below 768 px, `aria-label` kept              |
+| Implementation | Removing the heading would leave no `<h1>`                     | One `<h1>` hidden visually with `visually-hidden`                   |
+| Implementation | Logo could fail to load before the script runs                 | Error listener plus startup check; text fallback "Flight Check"     |

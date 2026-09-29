@@ -10,7 +10,7 @@ I used an AI coding agent in VS Code with a detailed prompt to scaffold the back
 
 ## Project Structure
 
-`backend/app` contains the FastAPI code, and `backend/tests` contains the pytest tests. `backend/app/data` contains the generated `airport_countries.json`; the empty `city_country.json` was removed. The `frontend` folder contains `index.html`, `css`, and `js`. The `docs` folder contains documentation for each project phase. Secrets are kept in `backend/.env`, which Git ignores. `backend/.env.example` lists the variable names.
+`backend/app` contains the FastAPI code, and `backend/tests` contains the pytest tests. `backend/app/data` contains the generated `airport_countries.json`; the empty `city_country.json` was removed. `backend/scripts` contains the scripts that build and check the airport data. The `frontend` folder contains `index.html`, `css`, `js`, and `images` (the logo files). The `docs` folder contains documentation for each project phase. Secrets are kept in `backend/.env`, which Git ignores. `backend/.env.example` lists the variable names.
 
 ## What Was Built First
 
@@ -68,6 +68,8 @@ Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityI
 
 ### Frontend: First Version
 
+This section describes the first frontend version. Some of these features were later changed or removed; see "Improvements After User Testing" and "Themes and Branding".
+
 #### Structure
 
 The frontend uses plain HTML, Bootstrap 5, and vanilla JavaScript with ES modules. It has no build tools. The code is split into three files: `api.js` fetches data and handles errors, `render.js` builds table rows, badges, and flags, and `app.js` manages state, events, filters, paging, and auto refresh. The backend does the calculations, so the frontend only displays and filters the data.
@@ -83,7 +85,7 @@ The frontend uses plain HTML, Bootstrap 5, and vanilla JavaScript with ES module
 - The page refreshes every 60 seconds to match the backend cache. It shows the last-updated time and has a manual refresh button. Filters and scroll position are kept.
 - Airport, direction, and date are stored in the URL, so a view can be shared and survives a page reload.
 - Loading spinner, clear API errors with a Retry button, and an empty state cover loading, error, and no-results cases. Missing values show as "—".
-- On small screens the table scrolls inside its own container and less important columns are hidden. Light and dark mode follow the system setting.
+- On small screens the table scrolls inside its own container and less important columns are hidden. Light and dark mode followed the system setting (later replaced by two selectable themes).
 
 #### Security
 
@@ -109,9 +111,43 @@ After testing the first frontend version myself, I found one bug and four things
 - Automatic checks found no duplicate HTML IDs, `innerHTML`, inline `onclick`, or API key in the frontend. There were no JavaScript errors during normal use.
 - I also tested the page manually in my own browser, which is how I found the upcoming bug.
 
-## Comparison: Original vs My Version
+### Themes and Branding
 
-<!-- Compare the original application and this implementation. -->
+#### Theme switcher
+
+- The app has two color themes:
+  - **Nordic sky** (light): navy `#0B2545` for the navbar and buttons, accent blue `#3A86C8`, and background `#F4F7FB`.
+  - **Departure board** (dark): background `#111418`, panels and navbar `#1B2027`, and amber accent `#F5B301`. Times are shown in amber, like a real departure board.
+- Times and flight numbers use a monospace font (IBM Plex Mono) with equal-width digits in both themes, so columns of times line up.
+- I chose between three palette proposals and kept two, so the user can switch between them with a button in the navbar. The button shows "Board view" or "Sky view", depending on which theme it switches to.
+- Status colors keep the same meaning in both themes: landed green, cancelled red, delayed amber, and scheduled blue. Each theme has its own badge background and text colors.
+- On the first visit, the theme follows the system light or dark setting. After the user picks a theme, the choice is saved in `localStorage` (key `flight-check-theme`). If `localStorage` is blocked, the app still works and only the saved choice is lost.
+- A small script at the top of the page head sets the theme before the stylesheets load. This avoids a flash of the wrong theme when the page loads.
+- Bootstrap's own light and dark mode (`data-bs-theme`) follows the selected theme, so inputs, buttons, and the details panel match the theme.
+- **Contrast:** In Nordic sky, the accent blue `#3A86C8` has a contrast ratio of only 3.6:1 against the background, so it is used for borders, focus outlines, and highlights. Text uses a darker blue, `#23679D` (5.6:1). Muted text uses `#3A5A80` (6.6:1). In Departure board, amber on the dark background is about 10:1. All status badge text has a contrast of at least 6.8:1 against its badge background.
+- **Accessibility:** The theme button uses `aria-pressed` to show whether Departure board is active. Its `aria-label` describes the action ("Switch to departure board theme" or "Switch to Nordic sky theme"). The icon is hidden from screen readers with `aria-hidden`. The button has a visible focus outline for keyboard users. Colors change with a short 150 ms transition, and all transitions and animations are turned off when the system setting "reduce motion" is on.
+
+#### Logo and header
+
+- The old logo (an "F" icon and the text "Flight Check") was replaced with my own silver logo. It has a desktop and a mobile version, `frontend/images/fc_silver_desktop.PNG` and `frontend/images/fc_silver_mobile.PNG`.
+- A `<picture>` element chooses the logo by screen width: the mobile version below 768 px (Bootstrap's md breakpoint) and the desktop version from 768 px. The logo is 40 px high on desktop and 30 px on mobile, with automatic width so it is never stretched.
+- The same silver logo is used in both themes, because both navbars are dark.
+- The logo is centered horizontally in the navbar with a three-column CSS grid (`minmax(0, 1fr) auto minmax(0, 1fr)`). The left column is empty, the logo is in the middle, and "Flight information" and the theme button are in the right column. It keeps the same link as before (`/`), a visible focus outline, and `aria-label="Flight Check home"`.
+- On screens below 768 px, "Flight information" is hidden, and the theme button shows only its icon so it fits next to the centered logo.
+- The visible "Flight board" heading was removed to give the page a cleaner look. The page still has exactly one `<h1>` ("Flight board"), hidden visually with Bootstrap's `visually-hidden` class, for screen readers and accessibility.
+- If the logo image cannot load, the text "Flight Check" is shown instead of a broken image icon.
+
+#### Testing Themes and Branding
+
+- Browser tests checked both themes at desktop and mobile widths (1280, 768, 767, 390, 360, and 320 px).
+- The desktop logo loaded at 768 px and above, and the mobile logo at 767 px and below.
+- The distance from the logo to the left and right page edges was equal at every width, for example 111.7 px on each side at 390 px.
+- The theme button did not overlap the logo at any tested width, and there was no horizontal scrolling.
+- Clicking the logo opened `/` as before, and the logo link was the first element reached with the Tab key.
+- The page had exactly one `<h1>`, no visible "Flight board" text, no duplicate HTML IDs, no `innerHTML`, and no JavaScript errors.
+- With the logo images blocked, the text "Flight Check" was shown instead.
+
+## Comparison: Original vs My Version
 
 | Aspect             | Original                                                        | My Version                                                            |
 | ------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------- |
@@ -119,14 +155,15 @@ After testing the first frontend version myself, I found one bug and four things
 | API requests       | No caching; every menu choice calls the API                     | 60-second cache to protect the request quota                          |
 | Testing            | No automated tests                                              | 25 pytest tests using real sample data                                |
 | Country lookup     | City name to country mapping, 263 cities                        | IATA code to country mapping, 4,155 airports, 100% coverage verified  |
-| Flight details     | Only raw times                                                  | Calculated delay, cancelled flag, remarks, and stopovers              |
+| Flight data        | Only raw times                                                  | Calculated delay, cancelled flag, remarks, and stopovers              |
 | Airport list       | Hardcoded in the program                                        | Served by the backend API                                             |
 | Location data      | No continent or location data                                   | Continent and coordinates for every destination                       |
 | Main interface     | Terminal menu with 6 options                                    | Web page with tabs, dropdowns, date and time pickers                  |
 | Flight search      | Separate menu option for flight number search                   | One search box for flight, city, country, airline, and continent      |
 | Paging             | Press Enter for the next 50 flights                             | "Show more" button, 50 at a time                                      |
 | Data updates       | Data shown only when a menu option is chosen                    | Auto refresh every 60 seconds                                         |
-| Presentation       | Text only                                                       | Flags, colored status badges, delay highlighting, light/dark mode     |
+| Presentation       | Text only                                                       | Flags, colored status badges, and delay highlighting                  |
+| Visual design      | No visual design (terminal text)                                | Two selectable themes, own logo, responsive layout                    |
 | Sharing            | Cannot be shared                                                | Shareable link with airport, direction, date, time, and filter in URL |
 | Upcoming logic     | Actual time missing (can show departed DEL flights as upcoming) | Based on status and time, verified against 875 real flights           |
 | Flight details     | All information on one line in the terminal                     | Clean table plus a details panel with all information                 |
@@ -159,3 +196,11 @@ After testing the first frontend version myself, I found one bug and four things
 - **Problem:** The AI agent broke the HTML while editing by duplicating controls and putting a button inside the heading. **Solution:** Browser tests detected it; the HTML was repaired and I verified there is one Now button and no duplicate IDs.
 - **Problem:** There were too many separate filters. **Solution:** I use one search box that also matches continent, plus quick filter buttons.
 - **Problem:** The first frontend version was never committed, which I discovered when Git showed the files as untracked. **Solution:** I committed backend and frontend together and now run `git status` before each new change.
+- **Problem:** The page could briefly show the wrong theme while loading. **Solution:** A small script at the top of the page head sets the theme before the stylesheets load.
+- **Problem:** Saving the theme choice fails if the browser blocks `localStorage`. **Solution:** Reading and saving are wrapped in `try`/`catch`, so the page still works and only the saved choice is lost.
+- **Problem:** The Nordic sky accent blue `#3A86C8` has too little contrast for text on the light background (3.6:1). **Solution:** I use it only for borders, focus outlines, and highlights, and use a darker blue `#23679D` (5.6:1) for text.
+- **Problem:** The first theme version prepared a separate logo for each theme (`logo-sky.svg` and `logo-board.svg`), but the files did not exist, so the code was switched off to avoid 404 errors and always showed the old text logo. **Solution:** I made one silver logo that works on both dark navbars and removed the per-theme logo logic.
+- **Problem:** A normal flex layout centers the logo only in the space left over next to the right-side items, so it is not centered on the page. **Solution:** A three-column grid with two equal side columns (`minmax(0, 1fr)`) keeps the logo exactly in the middle, even when the right column has more content.
+- **Problem:** On a phone-sized screen (390 px), the theme button overlapped the centered logo. **Solution:** Below 768 px, the button shows only its icon. Its `aria-label` still gives it a name for screen readers.
+- **Problem:** Removing the visible "Flight board" heading would leave the page without an `<h1>`. **Solution:** I kept one `<h1>` with Bootstrap's `visually-hidden` class, so screen readers still find it.
+- **Problem:** A broken logo image would show a broken-image icon. Because the JavaScript loads after the page, the image could fail before the error handler exists. **Solution:** The script listens for the error and also checks at startup if the image has already failed. In both cases it shows the text "Flight Check" instead.
