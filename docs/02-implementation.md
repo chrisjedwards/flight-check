@@ -10,7 +10,7 @@ I used an AI coding agent in VS Code with a detailed prompt to scaffold the back
 
 ## Project Structure
 
-`backend/app` contains the FastAPI code, and `backend/tests` contains the pytest tests. `backend/app/data` contains `city_country.json`. The `frontend` folder contains `index.html`, `css`, and `js`. The `docs` folder contains documentation for each project phase. Secrets are kept in `backend/.env`, which Git ignores. `backend/.env.example` lists the variable names.
+`backend/app` contains the FastAPI code, and `backend/tests` contains the pytest tests. `backend/app/data` contains the generated `airport_countries.json`; the empty `city_country.json` was removed. The `frontend` folder contains `index.html`, `css`, and `js`. The `docs` folder contains documentation for each project phase. Secrets are kept in `backend/.env`, which Git ignores. `backend/.env.example` lists the variable names.
 
 ## What Was Built First
 
@@ -31,21 +31,54 @@ First, I built `GET /api/health`, which returns `{"status": "ok"}`, a frontend p
 
 ### Testing the Backend
 
-- The backend has 8 automated pytest tests, and all pass.
+- The backend has 20 automated pytest tests, and all pass.
 - `test_timeutils.py` tests missing input, a summer example (05:09 UTC → 07:09), and a winter example (12:00 UTC → 13:00).
 - `test_swedavia.py` uses the saved real API response in `docs/sample-arrivals.json` to test `simplify_flight()`, including a flight without a gate. It also tests invalid airport and direction inputs.
 - No test calls the real API, so the tests are fast, free, and do not use the request quota.
 - Manual checks with curl against the running server returned real arrivals and departures with local times; `XXX` returned 400, and `2026-13-45` returned 422.
 
+### Backend Improvements Before the Frontend
+
+#### Country lookup via IATA code
+
+- The original app mapped city names to countries with a local file covering 263 cities. This is fragile because the API uses names such as "London LHR" and "Istanbul SAW". Every flight already includes IATA codes, so I map countries by code instead.
+- OurAirports public-domain data is downloaded by `backend/scripts/build_airport_data.py` to generate `backend/app/data/airport_countries.json`. The empty `city_country.json` file was removed.
+- The first version contained 9,054 airports (about 1.2 MB), many of them small airfields that never appear in Swedavia data.
+- The optimized version keeps airports with scheduled passenger service, all large airports as a safety net, and all 10 Swedavia airports. It contains 4,155 airports (about 803 KB): 4,133 kept because of scheduled service and 22 kept only because of the large-airport safety net.
+- For duplicate IATA codes, large airports are preferred over medium and small airports.
+- Each airport record includes its name, city, country, country code, continent, and coordinates (latitude and longitude).
+
+#### Coverage check
+
+- `backend/scripts/check_airport_coverage.py` checks that every destination in the flight data exists in the airport file. It can check offline against `docs/sample-arrivals.json`, or use `--live` to check my local API. It never calls Swedavia directly or reads the API key.
+- Coverage is 100%: 114 unique destinations offline and 126 with live data from ARN and GOT, with none missing.
+- If a new route has an unknown IATA code, the app logs a warning once. The app does not crash.
+
+#### Computed fields
+
+Each flight includes `country`, `countryCode`, `continent`, `lat`, `lon`, `cityIata`, `delayMinutes` (negative means early), `isUpcoming` (using the original `_is_upcoming` logic), `isCancelled`, `remarks` (for example, "Last bag on belt"), `via` (stopovers), and `scheduledUtc`. Flights are sorted by scheduled time. Continent and coordinates prepare for future flags, continent filters, distance calculations, and a map.
+
+#### Airports endpoint
+
+`GET /api/airports` returns the 10 Swedavia airports, so the airport list is defined in one place only.
+
+- Tests cover the new fields using real sample data: landed and upcoming flights, cancelled flight SK2182, delay calculation, country lookup for LHR, and its Europe continent.
+- Tests check that all 10 Swedavia airports and every destination in the sample data exist in the airport file.
+- Tests cover unknown and empty IATA codes, and `GET /api/airports`.
+
 ## Comparison: Original vs My Version
 
 <!-- Compare the original application and this implementation. -->
 
-| Aspect             | Original                                    | My Version                                   |
-| ------------------ | ------------------------------------------- | -------------------------------------------- |
-| Time-zone handling | Fixed +1 hour time offset (CET)             | Automatic summer/winter time with `ZoneInfo` |
-| API requests       | No caching; every menu choice calls the API | 60-second cache to protect the request quota |
-| Testing            | No automated tests                          | 8 pytest tests using real sample data        |
+| Aspect             | Original                                    | My Version                                                           |
+| ------------------ | ------------------------------------------- | -------------------------------------------------------------------- |
+| Time-zone handling | Fixed +1 hour time offset (CET)             | Automatic summer/winter time with `ZoneInfo`                         |
+| API requests       | No caching; every menu choice calls the API | 60-second cache to protect the request quota                         |
+| Testing            | No automated tests                          | 8 pytest tests using real sample data                                |
+| Country lookup     | City name to country mapping, 263 cities    | IATA code to country mapping, 4,155 airports, 100% coverage verified |
+| Flight details     | Only raw times                              | Calculated delay, cancelled flag, remarks, and stopovers             |
+| Airport list       | Hardcoded in the program                    | Served by the backend API                                            |
+| Location data      | No continent or location data               | Continent and coordinates for every destination                      |
 
 ## Problems & Solutions
 
@@ -57,3 +90,8 @@ First, I built `GET /api/health`, which returns `{"status": "ok"}`, a frontend p
 - **Problem:** Tests that call the real API would be slow and use the request quota. **Solution:** I saved a real response to `docs/sample-arrivals.json` and used it as test data.
 - **Problem:** I was not sure about the field names for departures. **Solution:** I verified them with one live API call before relying on them.
 - **Problem:** pytest showed a deprecation warning. **Solution:** I checked that it comes from the Starlette/httpx libraries, not my code, and noted it for later.
+- **Problem:** Matching countries by city name failed for names such as "London LHR". **Solution:** I switched to IATA codes and an open airport dataset.
+- **Problem:** The first dataset had 9,054 airports, mostly irrelevant. **Solution:** I filtered on scheduled service with a large-airport safety net, then verified 100% coverage before keeping the smaller file.
+- **Problem:** Filtering could silently remove a real destination. **Solution:** I built a coverage-check script and tests that fail if a destination is missing.
+- **Problem:** The dataset had duplicate IATA codes. **Solution:** I prefer large, then medium, then small airports.
+- **Problem:** The app could crash if the airport data file was missing or a code was unknown. **Solution:** I added an empty fallback and a one-time warning in the log.
