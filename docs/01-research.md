@@ -188,8 +188,8 @@ I wrote `backend/scripts/probe_waittime.py` to test the API before building on i
 3. Backend: Swedavia client, time conversion, and caching (done).
 4. Frontend: airport and date selection, arrivals and departures tabs, and search (done).
 5. Destination filter (done). The plan was to use `city_country.json`, but I replaced it with `airport_countries.json`, which maps IATA codes to countries. Search now matches country and continent (see [02-implementation.md](02-implementation.md)).
-6. AI natural-language search (not started; only a placeholder file and the settings exist).
-7. Final testing, documentation, and video (not finished).
+6. AI natural-language search (not built; only a placeholder file and the settings exist, see [05-conclusion.md](05-conclusion.md#what-could-be-improved)).
+7. Final testing and documentation (done, see [03-completion.md](03-completion.md#testing)), and video (submitted separately with the assignment).
 
 ## Problems & Solutions
 
