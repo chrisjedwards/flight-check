@@ -29,7 +29,7 @@ The `theme-color` meta tag tells mobile browsers which color to use for their to
 - A browser test checked both themes at desktop (1280 px) and mobile (390 px) width: arrivals and departures, all four quick filters, search, the time filter and Now button, Clear filters, and the details panel (click, Enter, Escape, and focus return). The "Showing X of Y" numbers matched counts calculated directly from the API data. All 117 checks passed.
 - The theme color was correct on page load and changed when the theme was switched.
 - There were no console errors, no duplicate HTML IDs, no horizontal scrolling on mobile, and still no `innerHTML`.
-- All 25 backend tests passed (`cd backend && python -m pytest -q`).
+- All 25 backend tests at that time passed (`cd backend && python -m pytest -q`). The wait time tests were added later; see [Testing](#testing) for the final count.
 
 ## Testing
 
@@ -103,11 +103,7 @@ Follow the [setup instructions in the README](../README.md#setup-and-run).
 ### Presentation
 
 - **Source code and documentation:** <https://github.com/chrisjedwards/flight-check>
-- **Video:** To be added after recording.
-  - Link:
-  - Length:
-  - What the video shows:
-    -
+- **Video:** a recorded walkthrough of the project (at least 4 minutes, in English) is submitted separately together with the assignment.
 
 ### Possible future deployment
 
