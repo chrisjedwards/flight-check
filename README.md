@@ -43,6 +43,8 @@ Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swe
 From the project root:
 
 ```sh
+git clone https://github.com/chrisjedwards/flight-check.git
+cd flight-check
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r backend/requirements.txt
@@ -58,7 +60,7 @@ Add your own Swedavia keys in `backend/.env`. The file is ignored by Git.
 Start the server:
 
 ```sh
-cd backend && uvicorn app.main:app --reload
+cd backend && uvicorn app.main:app --reload --reload-dir app
 ```
 
 Open <http://127.0.0.1:8000> to view the app.
