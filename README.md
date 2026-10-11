@@ -1,6 +1,10 @@
 # Flight Check
 
-Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swedavia airports. It rebuilds a Python terminal app (reverse-engineered from a screen recording) as a web app, using the Swedavia FlightInfo API v2 and WaitTime API v2. AI search is planned but not built yet.
+Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swedavia airports. It rebuilds a Python terminal app (reverse-engineered from a screen recording) as a web app, using the Swedavia FlightInfo API v2 and WaitTime API v2.
+
+
+![Flight Check departures at Stockholm Arlanda](docs/assets/flight-check.png)
+
 
 ## Features
 
@@ -21,7 +25,6 @@ Flight Check is a web app that shows arrivals and departures for Sweden's 10 Swe
 - Python 3, FastAPI, async httpx, python-dotenv
 - Plain HTML, Bootstrap 5 CDN, and vanilla JavaScript (ES modules, no build tools)
 - pytest and FastAPI TestClient
-- Planned AI provider options: local Ollama or Claude API
 
 ## Data Sources
 
@@ -55,7 +58,6 @@ Add your own Swedavia keys in `backend/.env`. The file is ignored by Git.
 
 - `SWEDAVIA_API_KEY`: FlightInfo API key, required for flight data.
 - `SWEDAVIA_WAITTIME_KEY`: WaitTime API key, a separate subscription. It is optional: without it, the security queue feature is turned off and the rest of the app works as before.
-- `AI_PROVIDER`, `ANTHROPIC_API_KEY`, and `OLLAMA_MODEL` are for the planned AI search and are not used yet.
 
 Start the server:
 
@@ -90,3 +92,7 @@ The 43 tests use saved sample data and never call the real API.
 - [Phase 3: Completion](docs/03-completion.md)
 - [Phase 4: Problems and Solutions](docs/04-problems-and-solutions.md)
 - [Conclusion](docs/05-conclusion.md)
+
+## Roadmap
+
+- AI-powered search in natural language (for example "delayed flights to Spain this afternoon"), with local Ollama or the Claude API as the provider
